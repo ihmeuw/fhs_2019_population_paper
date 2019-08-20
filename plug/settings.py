@@ -10,8 +10,8 @@ SDI and death only have one alt version where -1 is SDG and 1 is 99.
 Example usage:
 
 import settings
-settings.VERSIONS["met_need"].gbd_round_id
-settings.VERSIONS["met_neec"].version
+settings.BASELINE_VERSIONS["met_need"].gbd_round_id
+settings.BASELINE_VERSIONS["met_neec"].version
 """
 from collections import namedtuple
 
