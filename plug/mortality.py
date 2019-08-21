@@ -49,7 +49,7 @@ def lex_min_max(lex_ref_version):
                               age_group_id=2).max().values
 
     print_statement = f"Country life expectancy in 2100 for ref scenario " \
-        f"range from {min_val} to {max_val}"
+        f"range from {min_val.round(1)} to {max_val.round(1)}"
 
     print(print_statement)
 
@@ -69,8 +69,9 @@ def std_dev_year(lex_ref_version, lex_past_version):
                                        age_group_id=2)\
                                   .std()
 
-    print_statement = f"Standard deviation in 2017: {std_dev_2017.values}," \
-        f"Standard deviation in 2100: {std_dev_2100.values}"
+    print_statement = f"Standard deviation in 2017: "\
+        f"{std_dev_2017.values.round(1)}," \
+        f"Standard deviation in 2100: {std_dev_2100.values.round(1)}"
 
     print(print_statement)
 
@@ -78,46 +79,47 @@ def std_dev_year(lex_ref_version, lex_past_version):
 
 
 def low_lex_countries(lex_ref_version):
-    t = lex_ref_version.sel(sex_id=3, scenario=0, year_id=2100, age_group_id=2)
-    cond = lex_ref_version.sel(sex_id=3, scenario=0, year_id=2100,
-                               age_group_id=2).values < 75
-    locations_under_75 = t.where(
-        cond).to_dataframe().reset_index().dropna().location_id
 
-    location_metadata = db.get_locations_by_max_level(3)
+    lex_df = lex_ref_version.sel(sex_id=3, scenario=0, year_id=2100,
+                                 age_group_id=2).rename(
+        "lex").to_dataframe().reset_index()
+    lex_under_75_df = lex_df.query("lex < 75")
 
-    lm = location_metadata[["location_id", "location_name", "region_name"]]
+    location_metadata = db.get_locations_by_max_level(3)[
+        ["location_id", "location_name", "region_name"]]
+    lex_location_verbose_df = lex_under_75_df.merge(location_metadata)
+    assert len(lex_location_verbose_df) == len(lex_under_75_df)
 
-    tt = pd.merge(locations_under_75, lm)
-
-    print_statement = f"Country regions the life expectancy less than 75: {tt.region_name.value_counts()}"
+    print_statement = f"Country regions with life expectancy less than 75:" \
+    f"{lex_location_verbose_df.region_name.value_counts()}"
 
     print(print_statement)
 
-    return tt
+    return lex_location_verbose_df
 
 
 def range_of_lex(lex_ref, lex_99, alt_sdg):
-    slower = lex_ref.sel(year_id=2100,
-                         location_id=1,
-                         sex_id=3,
-                         age_group_id=2,
-                         scenario=-1).values
-    fastest = lex_99.sel(year_id=2100,
-                         location_id=1,
-                         sex_id=3,
-                         age_group_id=2,
-                         scenario=1).values
+    slower = lex_ref.mean('draw').values
+    slower_lower = lex_ref.quantile(0.025, dim="draw")
+    slower_upper = lex_ref.quantile(0.95, dim="draw")
 
-    sdg = alt_sdg.sel(year_id=2100,
-                         location_id=1,
-                         sex_id=3,
-                         age_group_id=2,
-                         scenario=-1).values
+    fastest = lex_99.mean('draw').values
+    fastest_lower = lex_99.quantile(0.025, dim="draw")
+    fastest_upper = lex_99.quantile(0.95, dim="draw")
 
-    print_statement = f"2100 global life exp in slower scenario: {slower}." \
-        f" 2100 global life exp in fastest scenario: {fastest}." \
-        f" 2100 global life exp in sdg scenario: {sdg}."
+    sdg = alt_sdg.mean('draw').values
+    sdg_lower = alt_sdg.quantile(0.025, dim="draw")
+    sdg_upper = alt_sdg.quantile(0.95, dim="draw")
+
+    print_statement = f"2100 global life exp in slower scenario:"\
+        f"{slower.round(1)} with UI: {slower_lower.values.round(1)},"\
+        f"{slower_upper.values.round(1)}." \
+        f" 2100 global life exp in fastest scenario:"\
+        f" {fastest.round(1)} with UI:{fastest_lower.values.round(1)}," \
+        f" {fastest_upper.values.round(1)}." \
+        f" 2100 global life exp in sdg scenario: {sdg.round(1)} "\
+        f" with UI: {sdg_lower.values.round(1)}, {sdg_upper.values.round(1)}."
+
     print(print_statement)
 
     return slower, fastest, sdg
@@ -127,23 +129,37 @@ if __name__ == "__main__":
 
     lex_ref_file = FBDPath(
         f"/{gbd_round_id}/future/life_expectancy/{REF}/lex_agg.nc")
-    lex_ref = open_xr(lex_ref_file).data.mean("draw")
+    lex_ref = open_xr(lex_ref_file).data
+    lex_ref_mean = open_xr(lex_ref_file).data.mean('draw')
 
     lex_past_file = FBDPath(
         f"/{gbd_round_id}/past/life_expectancy/{PAST}/lex.nc")
     lex_past = open_xr(lex_past_file).data
 
     alt_99 = open_xr(FBDPath(
-        f"/{gbd_round_id}/future/life_expectancy/{ALT_99}/lex_agg.nc")).data.mean(
-        'draw')
+        f"/{gbd_round_id}/future/life_expectancy/{ALT_99}/lex_agg.nc")).data
 
     alt_sdg = open_xr(FBDPath(
-        f"/{gbd_round_id}/future/life_expectancy/{ALT_SDG}/lex_agg.nc")).data.mean(
-        'draw')
+        f"/{gbd_round_id}/future/life_expectancy/{ALT_SDG}/lex_agg.nc")).data
 
-    min_val, max_val = lex_min_max(lex_ref)
-    std_dev_2017, std_dev_2100 = std_dev_year(lex_ref,
+    min_val, max_val = lex_min_max(lex_ref_mean)
+    std_dev_2017, std_dev_2100 = std_dev_year(lex_ref_mean,
                                               lex_past)
-    low_lex = low_lex_countries(lex_ref)
+    low_lex = low_lex_countries(lex_ref_mean)
 
-    slower, fastest, sdg = range_of_lex(lex_ref, alt_99, alt_sdg)
+    lex_ref_2100 = lex_ref.sel(year_id=2100,
+                         location_id=1,
+                         sex_id=3,
+                         age_group_id=2,
+                         scenario=-1)
+    alt_99_2100 = alt_99.sel(year_id=2100,
+                         location_id=1,
+                         sex_id=3,
+                         age_group_id=2,
+                         scenario=-1)
+    alt_sdg_2100 = alt_sdg.sel(year_id=2100,
+                         location_id=1,
+                         sex_id=3,
+                         age_group_id=2,
+                         scenario=-1)
+    slower, fastest, sdg = range_of_lex(lex_ref_2100, alt_99_2100, alt_sdg_2100)
