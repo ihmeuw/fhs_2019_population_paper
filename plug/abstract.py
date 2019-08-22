@@ -33,7 +33,6 @@ from fbd_core.etl.transformation import expand_dimensions
 from fbd_core.file_interface import FBDPath, open_xr, save_xr
 
 import settings
-import ipdb
 
 ALL_AGE_ID = 22
 BOTH_SEX_ID = 3
@@ -392,16 +391,16 @@ def largest_gdp():
 
 if __name__ == "__main__":
 
-    # tfr_2100()
-    # pop_peak()
-    # most_populated_2100()
-    # age_pops()
-    # tfr_below_replacement()
-    # pop_declines()
-    # alt_scenario_pops()
+    tfr_2100()
+    pop_peak()
+    most_populated_2100()
+    age_pops()
+    tfr_below_replacement()
+    pop_declines()
+    alt_scenario_pops()
     wpp_witt_pops()
     wpp_fhs_diff()
-    # largest_gdp()
+    largest_gdp()
 
 
     great_job.congratulations()
