@@ -37,6 +37,8 @@ def taiwan_tfr():
     
     taiwan_tfr = tfr_da.values.item(0)
 
+    print(f"country like Taiwan, with a current TFR of {taiwan_tfr}\n")
+
 if __name__ == "__main__":
 
     taiwan_tfr()

@@ -106,7 +106,7 @@ def largest_gdp():
 
     print(f"China rises to the top in {china_year} year in the reference "
           f"scenario but then is superseded by the US again in {usa_year} as "
-          f"population decline curtails economic growth")
+          f"population decline curtails economic growth.\n")
 
 # Despite huge declines in population expected this century, Japan remains the
 # fourth largest economy in 2100.
