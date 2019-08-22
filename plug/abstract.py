@@ -221,11 +221,15 @@ def pop_declines():
     past_pop_da = open_xr(past_pop_path).data.sel(
         sex_id=BOTH_SEX_ID, age_group_id=ALL_AGE_ID, location_id=COUNTRIES)
 
-    pct_decline_da = 1-(forecast_pop_da.sel(year_id=2100)/past_pop_da.sel(year_id=2017))
+    pct_decline_da = 1-(forecast_pop_da.sel(year_id=2100)/past_pop_da.sel(
+        year_id=2017))
     decline_over_50_val = (pct_decline_da > .4).sum().values.item(0)
-    decline_over_50_locs = list(pct_decline_da.where(pct_decline_da > .5, drop=True).location_id.values)
+    decline_over_50_locs = list(pct_decline_da.where(
+        pct_decline_da > .4, drop=True).location_id.values)
     ipdb.set_trace()
-    print(f"XX countries including China, XX, XX and XX in the reference scenario will have declines of greater than 50% from 2017 by 2100.")
+    print(f"XX countries including China, XX, XX and XX "
+          f"in the reference scenario will have declines of greater than "
+          f"50% from 2017 by 2100.")
 
 
 # Alternative scenarios suggest meeting the SDG targets for education and
