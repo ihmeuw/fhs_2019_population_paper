@@ -46,6 +46,13 @@ COUNTRIES = db.get_locations_by_level(3).location_id.values.tolist()
 def _helper_round(val, divide_by_this):
     return round(val/divide_by_this, N_DECIMALS)
 
+def _location_id_to_name(location_ids):
+    locs = db.get_locations_by_max_level(3)[['location_id', 'location_name']]
+    locs = locs[locs['location_id'].isin(location_ids)]
+    location_names = locs['location_name'].tolist()
+
+    return location_names
+
 
 # The global total fertility rate (TFR) in 2100 is forecasted to be 1.66 
 # (95% UI xx–xx).
@@ -240,11 +247,12 @@ def pop_declines():
 
     pct_decline_da = 1-(forecast_pop_da.sel(year_id=2100)/past_pop_da.sel(
         year_id=2017))
-    decline_over_50_val = (pct_decline_da > .4).sum().values.item(0)
+    decline_over_50_val = (pct_decline_da > .5).sum().values.item(0)
     decline_over_50_locs = list(pct_decline_da.where(
-        pct_decline_da > .4, drop=True).location_id.values)
+        pct_decline_da > .5, drop=True).location_id.values)
+    decline_over_50_locs = _location_id_to_name(decline_over_50_locs)
     
-    print(f"XX countries including China, XX, XX and XX "
+    print(f"{decline_over_50_val} countries including {decline_over_50_locs} "
           f"in the reference scenario will have declines of greater than "
           f"50% from 2017 by 2100.\n")
 
@@ -384,15 +392,15 @@ def largest_gdp():
 
 if __name__ == "__main__":
 
-    tfr_2100()
+    # tfr_2100()
     # pop_peak()
     # most_populated_2100()
     # age_pops()
     # tfr_below_replacement()
     # pop_declines()
     # alt_scenario_pops()
-    # wpp_witt_pops()
-    # wpp_fhs_diff()
+    wpp_witt_pops()
+    wpp_fhs_diff()
     # largest_gdp()
 
 
