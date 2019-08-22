@@ -40,6 +40,7 @@ BASELINE_VERSIONS = dict(
   tfr=VersionGBDRoundID("20190806_141418_fix_draw_bound_ccfx_to2110", 5),
   tfr_mean_ui=VersionGBDRoundID(
     "20190806_141418_fix_draw_bound_ccfx_to2110_combined", 5),
+  gdp=VersionGBDRoundID("20190808_15_ref_85_agg_gdp", 5)
 )
 
 FASTEST_SCENARIO_VERSIONS = dict(
@@ -64,6 +65,7 @@ FASTEST_SCENARIO_VERSIONS = dict(
   tfr=VersionGBDRoundID("20190807_163915_fix_draw_bound_ccfx_99th_to2110", 5),
   tfr_mean_ui=VersionGBDRoundID(
     "20190807_163915_fix_draw_bound_ccfx_99th_to2110_combined", 5),
+  gdp=VersionGBDRoundID("20190808_15_ref_85_agg_gdp", 5)
 )
 
 SDG_SCENARIO_VERSIONS = dict(
@@ -89,6 +91,7 @@ SDG_SCENARIO_VERSIONS = dict(
     "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped", 5),
   tfr_mean_ui=VersionGBDRoundID(
     "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped_combined", 5),
+  gdp=VersionGBDRoundID("20190808_15_ref_85_agg_gdp", 5)
 )
 
 PAST_VERSIONS = dict(
