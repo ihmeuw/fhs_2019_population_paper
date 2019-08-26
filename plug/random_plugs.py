@@ -155,6 +155,33 @@ def pop_declines():
           f"declines in population but have not adopted immigration as a "
           f"strategy.\n")
 
+
+# Japan and Russia pop rank 2017 vs 2100
+def japan_russia_pop():
+    past = xr.open_dataarray(
+        f"/ihme/forecasting/data/5/past/population/"
+        f"{settings.PAST_VERSIONS["population"].version}/population.nc")
+    past = past.sel(age_group_id=22, sex_id=3, location_id=COUNTRIES,
+        year_id=2017)
+    pastdf = past.to_dataframe()
+    pastdf = _add_location_name(pastdf)
+    pastdf = pastdf.sort_values(by="population", ascending=False).reset_index()
+    pastdf[pastdf['location_name']=="Japan"]
+    pastdf[pastdf['location_name']=="Russia"]
+
+    forecast = xr.open_dataarray(
+        f"/ihme/forecasting/data/5/future/population/"
+        f"{settings.BASELINE_VERSIONS["population_mean_ui"].version}/"
+        f"population.nc")
+    forecast = forecast.sel(age_group_id=22, sex_id=3, location_id=COUNTRIES,
+        year_id=2017)
+    forecastdf = forecast.to_dataframe()
+    forecastdf = _add_location_name(forecastdf)
+    forecastdf = forecastdf.sort_values(
+        by="value", ascending=False).reset_index()
+    forecastdf[forecastdf['location_name']=="Japan"]
+    forecastdf[forecastdf['location_name']=="Russia"]
+
 if __name__ == "__main__":
 
     sing_tai_tfr()
