@@ -158,6 +158,7 @@ def pop_declines():
 
 # Japan and Russia pop rank 2017 vs 2100
 def japan_russia_pop():
+    # This one isn't direct output needs user to read index
     past = xr.open_dataarray(
         f"/ihme/forecasting/data/5/past/population/"
         f"{settings.PAST_VERSIONS["population"].version}/population.nc")
@@ -174,7 +175,7 @@ def japan_russia_pop():
         f"{settings.BASELINE_VERSIONS["population_mean_ui"].version}/"
         f"population.nc")
     forecast = forecast.sel(age_group_id=22, sex_id=3, location_id=COUNTRIES,
-        year_id=2017)
+        year_id=2100)
     forecastdf = forecast.to_dataframe()
     forecastdf = _add_location_name(forecastdf)
     forecastdf = forecastdf.sort_values(
