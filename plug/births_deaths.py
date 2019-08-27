@@ -45,6 +45,7 @@ def return_ordered_cumulative_diff(measure, gbd_round_id, wpp_version, fbd_versi
 
     return output[:5]
 
+
 def get_location_name(location_id):
     loc_map = get_location_metadata(
         location_set_id=39, gbd_round_id=5).query(
@@ -52,6 +53,7 @@ def get_location_name(location_id):
     location_name_searched = loc_map[
         loc_map["location_id"]==int(location_id)].location_name.iloc[0]
     return location_name_searched
+
 
 def print_sentences(birth_diffs, death_diffs):
     top_1_birth_value = (birth_diffs[1].values/1e6).round(2)
@@ -75,6 +77,7 @@ def print_sentences(birth_diffs, death_diffs):
 
 
 if __name__ == "__main__":
+
     birth_diffs = return_ordered_cumulative_diff(
         "live_births", 5, "20190822_annual_agg", "20190821_for_pop")
     death_diffs = return_ordered_cumulative_diff(
