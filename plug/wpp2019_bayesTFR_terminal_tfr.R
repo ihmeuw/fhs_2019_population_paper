@@ -48,7 +48,7 @@ all <- data.frame(
     WPP2019_new_phaseIII = round(wpp_new_phaseIII,2)
     )
 knitr::kable(all)
-
+fwrite(all, sprintf("%s/WPP2019_terminal_TFR.csv", WPP_PATH))
 
 # locations in phase III
 phase3_wpp2019 <- fread(sprintf("%s/%s/bayesTFR_phase3_locations.csv", WPP_PATH, WPP_RERUN_VERSION))
@@ -56,10 +56,15 @@ phase3_new_wpp2019 <- fread(sprintf("%s/%s/bayesTFR_phase3_locations.csv", WPP_P
 
 # added to phase III by modification
 added <- phase3_new_wpp2019$country_name[!(phase3_new_wpp2019$country_name %in% phase3_wpp2019$country_name)]
-added
 
 # removed from phase III by modification
-phase3_wpp2019$country_name[!(phase3_wpp2019$country_name %in% phase3_new_wpp2019$country_name)]
+removed <- phase3_wpp2019$country_name[!(phase3_wpp2019$country_name %in% phase3_new_wpp2019$country_name)]
 
+paste0("WPP2019 Phase III Countries: #", nrow(phase3_wpp2019))
 cat(sort(phase3_wpp2019$country_name), sep = ", ")
+
+paste0("WPP2019 Phase III Countries Added with Modification: #", nrow(phase3_new_wpp2019))
 cat(sort(added), sep = ", ")
+
+# check that no countries were removed
+removed
