@@ -221,18 +221,6 @@ def pop_decline_pcts():
     ratio_2017 = (past_pop_over_25.sel(age_group_id=over_80_age_ids).sum('age_group_id').sum('location_id') /
         past_pop_over_25.sel(age_group_id=under_15_age_ids).sum('age_group_id').sum('location_id')).values.item(0)
 
-    forecast_pop_upper = open_xr(forecast_pop_path).data.sel(
-        sex_id=BOTH_SEX_ID, scenario=0, quantile="upper",
-        location_id=decline_over_50_locs)
-    forecast_pop_lower = open_xr(forecast_pop_path).data.sel(
-        sex_id=BOTH_SEX_ID, scenario=0, quantile="lower",
-        location_id=decline_over_50_locs)
-
-    ratio_2100_lower = (forecast_pop_lower.sel(age_group_id=over_80_age_ids).sum('age_group_id').sum('location_id') /
-        forecast_pop_lower.sel(age_group_id=under_15_age_ids).sum('age_group_id').sum('location_id')).values.item(0)
-    ratio_2100_upper = (forecast_pop_upper.sel(age_group_id=over_80_age_ids).sum('age_group_id').sum('location_id') /
-        forecast_pop_upper.sel(age_group_id=under_15_age_ids).sum('age_group_id').sum('location_id')).values.item(0)
-
     forecast_pop_draw_dir = FBDPath(
         f"/{settings.BASELINE_VERSIONS['population'].gbd_round_id}/"
         f"future/population/"
