@@ -31,7 +31,7 @@ from fbd_core.etl.transformation import expand_dimensions
 from fbd_core.file_interface import FBDPath, open_xr, save_xr
 
 import settings
-import ipdb
+
 ALL_AGE_ID = 22
 BOTH_SEX_ID = 3
 
