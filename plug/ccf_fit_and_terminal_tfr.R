@@ -1,5 +1,6 @@
 ## Get "terminal" CCF50 estimate for edu = 16 and mn = 0.95
-## Used in the discussion 
+## Also check % of variance explained by CCF50 model and the number of years used
+## Used in the discussion
 
 library(splines)
 

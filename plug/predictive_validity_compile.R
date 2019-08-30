@@ -1,4 +1,7 @@
 # Compile predictive validity results
+# The predictive validity results came from two runs (10 year hold out with our model,
+# and another with WPP). This script just puts these results in a .csv that can be opened in
+# Excel then copied and pasted into the appendix.
 
 library(data.table)
 library(tidyverse, lib.loc = "/ihme/forecasting/shared/r")

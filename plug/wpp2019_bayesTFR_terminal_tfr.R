@@ -1,3 +1,8 @@
+# Purpose: determine "terminal" at WPP2019 and our re-esimation of WPP2019 TFR
+# the re-estimation changed the criteria for phase III fertility used by UNPD
+# these are in the results appendix and mentioned in the population paper discussion
+
+
 library(data.table)
 library(tidyverse)
 
@@ -15,7 +20,7 @@ res_newIII_final <- res_newIII$`2095-2100`
 res_newIII_init <- res_newIII$`2015-2020`
 
 # WPP2019 forecasts (not reestimated)
-res_wpp_long <- xarray_nc_to_R("/share/forecasting/data/wpp/future/tfr/2019/tfr.nc")
+res_wpp_long <- xarray_nc_to_R("/ihme/forecasting/data/wpp/future/tfr/2019/tfr.nc")
 res_wpp_final <- subset(res_wpp_long, year_id == 2095)$value
 res_wpp_init <- subset(res_wpp_long, year_id == 2015)$value
 length(res_wpp_init)

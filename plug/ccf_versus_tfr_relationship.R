@@ -1,8 +1,9 @@
 ###############################################################################
-# Author: Julian Chalek
+# Author: Julian Chalek / Emily Goren
 # Date: 7/30/2019
-# Goal: CCF/TFR time series panel plots
 # edited by EMG 8/19/2019 to count divergent trends
+# this code now is an EDA to compares location-year increases between TFR and CCF
+# used for plugging in the fertility methods section
 ###############################################################################
 
 rm(list=ls())
