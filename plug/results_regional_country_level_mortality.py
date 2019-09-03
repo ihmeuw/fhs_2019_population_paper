@@ -78,11 +78,11 @@ def get_rate_of_change(ex, year_start, year_end):
     return rate_change
 
 
-def print_ratio_arc(ex, past_start, past_end, fut_start, fut_end):
+def print_ratio_arc(ex_da, past_start, past_end, fut_start, fut_end):
 	# Print ratio of future ARC to past ARC sorted by ratio
 
-    rate_change_past = get_rate_of_change(ex, past_start, past_end)
-    rate_change_fut = get_rate_of_change(ex, fut_start, fut_end)
+    rate_change_past = get_rate_of_change(ex_da, past_start, past_end)
+    rate_change_fut = get_rate_of_change(ex_da, fut_start, fut_end)
     
     ratio_rate_change = (rate_change_fut / rate_change_past).rename(
         "ratio").to_dataframe().reset_index()
@@ -96,7 +96,7 @@ def print_ratio_arc(ex, past_start, past_end, fut_start, fut_end):
 
 
 def get_highest_pop_locs_past_fut(pops, past_year, fut_year, num_locs):
-	# Get n highest locs in past and future and combine
+	# Get num_locs highest locs in past and future and combine
 
     highest_past = set(pops.sel(
         year_id=past_year,
@@ -144,9 +144,9 @@ if __name__ == "__main__":
 	"Among the ten countries with the largest populations in
 	2017 or 2100..."
 
-	Though this may seem like we want the combinations of the highest population
-	countries in 2017 and the highest population countries in 2100, we actually
-	want 10 countries total. To do this, we combine the 8 largest countries in
-	2017 and the 8 largest countries in 2100.
+	Though this may sound like we want the combinations of the 10 highest
+	population countries in 2017 and the 10 highest population countries in
+	2100, we actually want 10 countries total. To do this, we combine the 8
+	largest countries in 2017 and the 8 largest countries in 2100.
 	"""
     print_lex_rank(pop, lex_mean_ui, 2017, 2100, 8)
