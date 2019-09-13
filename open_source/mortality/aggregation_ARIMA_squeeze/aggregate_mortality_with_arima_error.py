@@ -4,7 +4,7 @@ hierarchy and computes the following at each step:
     y_hat = expected value of mortality or ylds
     y_past = past mortality or ylds
     epsilon_past = y_hat - y_past
-    epsilon_hat = AR1(epsilon_past)
+    epsilon_hat = RW(epsilon_past)
     y_star = y_hat + epsilon_hat
 
 The following results are saved in their own directory:
