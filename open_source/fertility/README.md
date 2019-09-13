@@ -1,38 +1,38 @@
 README for fertility code
---------------------------
+=========================
 
 Data preparation
-=================
+-----------------
 1. From GBD ASFR Data, prep CCF50 and incremental fertility data `prep_ccf_difference_data.R`
 2. Merge in contraceptive met need and education covariates `prep_ccf_difference_covariates.R`
 
 Forecasting incomplete cohorts: CCFX
-====================================
+-------------------------------------
 1. Fit model `ccfx_model_fit.R`
 2. Forecast `ccfx_predict.R`
 
 Forecasting CCF50
-=================
+------------------
 1. Fit model `ccf50_model_fit.R`
 2. Forecast `ccf50_predict.R`
 
 Incremental fertility to obtain age-specific patterns
-=====================================================
+-----------------------------------------------------
 1. Fit model `incremental_predict.R`
 2. Forecast `incremental_predict.R`
 
 Converting CCF50 to ASFR
-=========================
+-------------------------
 1. Use CCF50 and PASFR to obtain ASFR `convert_ccf50_to_asfr.R`
 2. Moving average smoothing `ccf_intercept_shift.py`
 
-ACompute TFR and aggregate over location hierarchies
-====================================================
+Compute TFR and aggregate over location hierarchies
+---------------------------------------------------
 1. `make_tfr_and_agg.py`
 
 
 Utility functions used by above
-================================
+-------------------------------
 - Logit/expit `transformations.R`
 - Draw sorting over time `sort_draws.R`
 - ARIMA residual forecasting `forecast_arima.R`
