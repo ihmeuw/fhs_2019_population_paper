@@ -18,7 +18,7 @@ Forecasting CCF50
 
 Incremental fertility to obtain age-specific patterns
 -----------------------------------------------------
-1. Fit model `incremental_predict.R`
+1. Fit model `incremental_model_fit.R`
 2. Forecast `incremental_predict.R`
 
 Converting CCF50 to ASFR
