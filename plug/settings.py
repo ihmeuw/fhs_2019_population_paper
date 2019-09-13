@@ -101,6 +101,7 @@ PAST_VERSIONS = dict(
 
 WPP_VERSIONS = dict(
   population=VersionGBDRoundID("2019", "wpp"),
+  population_aggs=VersionGBDRoundID("2019_with_under5_our_aggs", "wpp"),
 )
 
 WITT_VERSIONS = dict(
