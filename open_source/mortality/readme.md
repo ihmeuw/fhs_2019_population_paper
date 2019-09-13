@@ -55,7 +55,7 @@ series in the dataset.
 
 ```
 PooledRandomWalk.py
-Pooled random walk for cause specific. Sigma is calculated across region or super-region data based on cause levels.
+Pooled random walk for cause specific, whose location pooling dimension is based on cause levelß
 ```
 
 # Squeeze

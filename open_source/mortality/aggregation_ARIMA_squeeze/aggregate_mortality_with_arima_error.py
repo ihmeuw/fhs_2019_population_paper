@@ -43,7 +43,6 @@ from fbd_core.file_interface import FBDPath
 from fbd_core.file_interface import save_xr
 from fbd_core.strategy_set import get_hierarchy
 from fbd_core.strategy_set.strategy import get_strategy_set
-from fbd_model.model.PooledAR1 import PooledAR1
 from fbd_model.model.PooledRandomWalk import PooledRandomWalk
 from fbd_model.model import RandomWalk as rw
 from fbd_scenarios import ar1_utils, remove_drift, subset_fatal
@@ -236,7 +235,7 @@ def _draw_epsilons(epsilon_past, draws, smoothing, years, acause, decay,
     """Draws forecasts for epsilons. For all-cause, this is done by running an
     attenuated drift model first to remove some of the time trend from the
     epsilons. Then for all causes (including all-cause) except NTD's, a Pooled
-    AR1 model is used to forecast the remaining residuals and generate
+    random walk model is used to forecast the remaining residuals and generate
     expanding uncertainty.
 
     :param xarray.DataArray epsilon_past: past epsilons (error of predictions
@@ -573,7 +572,7 @@ if __name__ == "__main__":
             help="Intercept shift the draws to incorporate past uncertainty")
     parser.add_argument(
             "--no-arima", action="store_true",
-            help="Create y-star without running an AR1 on the residuals")
+            help="Create y-star without running an random walk on the residuals")
     parser.add_argument(
             "--decay-rate", type=float, required=False, default=0.1,
             help="Rate at which drift on all-cause epsilons decay in future")
