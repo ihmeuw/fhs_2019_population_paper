@@ -1,6 +1,4 @@
-"""
-The code supports options described in the
-`IHME technical report on CCMP <https://www.overleaf.com/read/cfnpsgvcxkrx>`_.
+r"""
 This section describes what options are available and what choices have been
 made for forward projection.
 
@@ -12,7 +10,7 @@ made for forward projection.
     version of this code separated under-one time steps into single weeks
     and over-one time steps into single years. This code uses the same
     time step for all years because it makes the code clearer and is
-    actually faster.
+    #actually faster2
 
  #. Initial populations come from the GBD, taken from `db_queries`.
     These are interpolated onto weekly populations. The population is

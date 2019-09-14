@@ -19,8 +19,6 @@ For both 2015/2016, we predict life expectancy on young ages (28, 5), meaning
 
 For 2017, we take forecasted mx straight up to compute the the life table.
 That is, no extrapolation/extension is done to ameliorate the older ages.
-
-TODO us_counties_extrapolation_of_lx() may be candidate for deprecation.
 """
 from __future__ import division
 from collections import OrderedDict
@@ -36,8 +34,6 @@ from fbd_core.etl import expand_dimensions
 import fbd_core.demog
 import fbd_core.demog.lifetable
 import fbd_core.db
-
-BEST_LEX_MODEL = "gbd5_no_old_age_fit"  # could change based on research needs.
 
 
 LOGGER = logging.getLogger("fbd_research.lex.model")

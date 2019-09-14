@@ -80,7 +80,6 @@ def _mediation(mediation_file_path, gbd_round_id):
     gbd_year = get_gbd_round(gbd_round_id)
     med = pd.read_csv(mediation_file_path.format(gbd_year=gbd_year))
     # we use the mean of the draws as mediation factor
-    # TODO maybe start using draw level?
     if "mean" not in med.columns:
         draw_cols = [col for col in med.columns if "draw" in col]
         med["mean"] = med[draw_cols].mean(axis=1)
@@ -181,10 +180,6 @@ def get_cluster_risks(contributing_risks, risk_id_dict, risk_table):
     and values that are subsets of contributing_risks.
 
     Returns a dictionary. key: parent risk; value: list of sub-risks.
-
-    TODO: use something like `fbd_core.db.cause_risk._get_ancestors` instead of
-        path_to_top_parent since parent_id is much more reliable than
-        path_to_top_parent.
 
     Args:
         contributing_risks (list): list of risks contributing to 'cause'.
@@ -298,7 +293,6 @@ def aggregate_paf(acause, cause_risks, gbd_round_id, past_or_future, version,
     paf_prod = 1.0 - paf_prod
     paf_aggregated = paf_prod
 
-    # TODO move save functions outside of aggregation
     save_paf(paf_aggregated, gbd_round_id, past_or_future, version, acause,
              cluster_risk=cluster_risk)
     if cluster_risk:
@@ -386,7 +380,6 @@ def compute_scalar(acause, version, gbd_round_id, no_update_past, **kwargs):
 
             if len(subrisks) > 0:
                 LOGGER.info('Start aggregating cluster risk: {}'.format(key))
-                # TODO could be lots of wasteful re-writing here
                 aggregate_paf(acause, subrisks, gbd_round_id, past_or_future,
                               version, cluster_risk=key)
                 gc.collect()

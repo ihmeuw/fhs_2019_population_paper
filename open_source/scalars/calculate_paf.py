@@ -37,9 +37,6 @@ bypass using get_draws():
 Note that the 'draws' input arg is not only required, it also entails
 up/down-sampling if any of the upstream files have number of draws not equal
 to 'draws'.
-
-TODO: use the `fbd_core.file_interface.Versions` class to manage all the
-    various versions.
 """
 import gc
 import logging

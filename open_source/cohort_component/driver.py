@@ -60,22 +60,6 @@ from fbd_research.lex import model
 from fbd_core.file_interface import roots, save_xr
 
 LOGGER = logging.getLogger("fbd_research.cohort_component.driver")
-SMALL_NATIONS_ZERO_MIGRATION = {
-    "Kiribati": 23,
-    "Marshall Islands": 24,
-    "Federated States of Micronesia": 25,
-    "Tonga": 29,
-    "Dominica": 110,
-    "American Samoa": 298,
-    "Bermuda": 305,
-    "Northern Mariana Islands": 376,
-    "Andorra": 74,
-    "Greenland": 349
-}
-"""(dict of str: int): Countries whose population drops to zero.
-
-We will reduce their predicted future migration numbers.
-"""
 
 
 def perf_time():
@@ -614,8 +598,7 @@ def read_datasets(
         pop.name = "population"
 
     # asfr etl (draws expected)
-    # TODO the following conditional statement is a safeguard against running
-    # gbd round 4, because we only use asfr from round >= 5.
+
     asfr_gbd_round_id = gbd_round_id if gbd_round_id >= 5 else 5
     asfr_file = FBDPath("/{}/future/asfr/{}".format(
         asfr_gbd_round_id, asfr_version
@@ -626,7 +609,7 @@ def read_datasets(
         asfr = xr.open_dataarray(str(asfr_file))
     except OSError as ose:
         LOGGER.error("Cannot open asfr {}: {}".format(asfr_file, ose))
-        exit()
+        #exit(2
 
     assert set(asfr.dims) == {
         "draw", "year_id", "location_id", "scenario", "age_group_id"

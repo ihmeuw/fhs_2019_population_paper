@@ -13,21 +13,11 @@ from fbd_core.file_interface import FBDPath
 from fbd_core.strategy_set.strategy import get_strategy_set
 from fbd_core.strategy_set.query import get_hierarchy, get_hierarchy_version_id
 
-# TODO wholesale outsource subsequent methods to fbd_core.
-# TODO "These should definitely be in fbd_core somewhere." -- K. Tang.
 
 LOGGER = logging.getLogger(__name__)
 
-# risks where we don't have SEV and/or RRmax values
-# TODO: delete this global when we no longer run GBD 2016 scalars.
-GBD2016_MODELED_PAF_RISKS = (
-    "abuse_ipv_hiv", "abuse_ipv_paf", "drugs_illicit_direct",
-    "envir_lead_blood", "occ_injury", "unsafe_sex")
 
-GBD2016_MODELED_PAF_INJURY_RISKS = ("smoking_direct_prev", "metab_bmd")
-
-
-# Now we define the demographic indices
+# define the demographic indices
 LOCATION_DIM = "location_id"
 YEAR_DIM = "year_id"
 SEX_DIM = "sex_id"
@@ -91,8 +81,6 @@ def demographic_coords(gbd_round_id, years):
 def _get_cause_risk_pairs(gbd_round_id):
     """
     Returns most-detailed cause-risk pairs for the scalars pipeline.
-
-    TODO remove GBD 2016 functionality when appropriate
 
     Args:
         gbd_round_id (int): gbd round id.
@@ -366,7 +354,7 @@ def get_acause_related_risks(acause, gbd_round_id):
         list: a list of risks associated with this acause, ignoring the ones
             that are in_scalar = 0.
     """
-    if acause in ['rotavirus']:  # TODO refactor this mapping to settings.py?
+    if acause in ['rotavirus']:
         risks = ['rota']
     else:
         df_acause_risk = _get_cause_risk_pairs(gbd_round_id)
@@ -423,8 +411,6 @@ def get_risk_hierarchy(gbd_round_id):
     """
     A method for pulling the risk table using fbd_core.strategy_set.
 
-    TODO remove GBD 2016 functionality when appropriate
-
     Args:
         gbd_round_id (int): gbd round id.
 
@@ -459,7 +445,7 @@ def get_risk_hierarchy(gbd_round_id):
 
 
 def save_past_and_future(da, gbd_round_id, stage, version, file_name,
-                         year_args, sub_dir=None):  # TODO use it
+                         year_args, sub_dir=None):
     """
     Given dataarray, and relevant FBDPath metadata, saves file as .nc in both
     "past" and "future".
