@@ -6,7 +6,7 @@ It takes in 8 command line arguments: 4 population datasets (--fbd-pop, --witt-p
 3 Fertilty rate datasets(--fbd-tfr, --witt-tfr, --wpp-tfr), and whether the final table should contain
 superregions only or all regions ('y' 'n').
 
-An example call: python Witt_UNPD_IHME_Lancet_table_edits.py --fbd-pop population_combined --fbd-tfr tfr_combined
+Example usage: python Witt_UNPD_IHME_Lancet_table_edits.py --fbd-pop population_combined --fbd-tfr tfr_combined
 --wpp-pop 2019_fhs_agg_allage_bothsex_only --wpp-tfr tfr --wpp-pop-agg population --witt-pop population_ssp2
 --witt-tfr tfr --supers-only n
 
@@ -453,25 +453,25 @@ if __name__ == "__main__":
         "--fbd-pop",
         type=str,
         required=True,
-        help="File pathing to future FBD population data. Taken as parent_folder/data.nc"
+        help="File pathing to future FBD population data. Taken as name of data file \'.nc\' is not required"
     )
     parser.add_argument(
         "--fbd-tfr",
         type=str,
         required=True,
-        help="File pathing to FBD future tfr data. Taken as name of data file no .nc needed"
+        help="File pathing to FBD future tfr data. Taken as name of data file \'.nc\' is not required"
     )
     parser.add_argument(
         "--wpp-pop",
         type=str,
         required=True,
-        help="File pathing for WPP future pop data. Taken as name of data file no .nc needed"
+        help="File pathing for WPP future pop data. Taken as name of data file \'.nc\' is not required"
     )
     parser.add_argument(
         "--wpp-tfr",
         type=str,
         required=True,
-        help="File pathing for WPP future tfr data. Taken as name of data file no .nc needed"
+        help="File pathing for WPP future tfr data. Taken as name of data file \'.nc\' is not required"
     )
     parser.add_argument(
         "--wpp-pop-agg",
@@ -483,13 +483,13 @@ if __name__ == "__main__":
         "--witt-pop",
         type=str,
         required=True,
-        help="File pathing for WITT future pop data. Taken as name of data file no .nc needed"
+        help="File pathing for WITT future pop data. Taken as name of data file \'.nc\' is not required"
     )
     parser.add_argument(
         "--witt-tfr",
         type=str,
         required=True,
-        help="File pathing for WITT future tfr data. Taken as name of data file no .nc needed"
+        help="File pathing for WITT future tfr data. Taken as name of data file \'.nc\' is not required"
     )
 
     parser.add_argument(
