@@ -4,7 +4,7 @@ fertility rate, and population in millions by country. It can create a superregi
 
 It takes in 8 command line arguments: 4 population datasets (--fbd-pop, --witt-pop, --wpp-pop, --wpp-pop-agg),
 3 Fertilty rate datasets(--fbd-tfr, --witt-tfr, --wpp-tfr), and whether the final table should contain
-superregions only or all regions ('y' 'n').
+superregions only or all regions (--supers_only which takes 'y' 'n').
 
 Example usage: python Witt_UNPD_IHME_Lancet_table_edits.py --fbd-pop population_combined --fbd-tfr tfr_combined
 --wpp-pop 2019_fhs_agg_allage_bothsex_only --wpp-tfr tfr --wpp-pop-agg population --witt-pop population_ssp2
