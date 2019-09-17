@@ -99,7 +99,7 @@ def main(acause, version, sex_id, sdi_time_interaction, oos, years, draws,
         years (YearRange): first year of the past, the first year of the
             forecast, and the last year of the forecast.
         draws (int): number of draws to run the model on
-        subnat (bool): whether or not to include the 93 CSU subnational
+        subnat (bool): whether or not to include the subnational
             locations
         spline (bool): whether or not ot include a spline on SDI to separate
             out the different effects SDI has in high-income vs low-income
@@ -280,7 +280,7 @@ if __name__ == "__main__":
                               'term on time and sdi'))
     parser.add_argument('--subnational', action="store_true",
                         help=('Whether or not to run the model using '
-                              'the 93 subnational locations'))
+                              'the subnational locations'))
     parser.add_argument('--spline', action="store_true",
                         help=('Whether to put a spline on SDI'))
 
