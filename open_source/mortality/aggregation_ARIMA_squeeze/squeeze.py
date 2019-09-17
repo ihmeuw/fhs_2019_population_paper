@@ -4,21 +4,14 @@ children causes into their parent envelopes.
 
 By running `python squeeze.py --parent-cause <acause> --squeeze-version
 <squeeze-version> --star-version <star-version>`, the parent acause will act as
-the envelope to squeeze its children causes into and must
-already be in the fbd_scenarios_data/forecast/<measure>/<squeeze-version>
-directory. The one exception to this is if <acause> is "_all", in which is it
-moved from the hat_star_dot/<star-version> directory into the
-fbd_scenarios_data/forecast/<measure>/<squeeze-version> directory to begin the
-squeezing process.
+the envelope to squeeze its children causes.
 
 The things being squeezed are the *_star.nc files from the hat_star_dot
-directory and are saved in the fbd_scenarios/forecast/<measure> directory as a
-separate mortality or yld version.
+directory.
 
 The number of draws of the *_star.nc files must match the number of draws of
-the _all_star.nc file, and subsequently the resulting squeezed mortality or
-ylds in the fbd_scenarios_data/forecast/<measure> directory must have the same
-number of draws.
+the _all_star.nc file, and subsequently the resulting squeezed mortality must
+have the same number of draws.
 """
 import matplotlib
 matplotlib.use("Agg")
@@ -209,9 +202,6 @@ def _copy_all_star(star_version, squeeze_version, measure, gbd_round_id,
                    years, make_lex=False, past_version=None, dryrun=False):
     '''Copies _all_star.nc into _all.nc.
 
-    Moves the data from the hat_star_dot directory into the
-    fbd_scenarios_data/forecast/death directory of the appropriate version.
-
     The data is converted from log rate space into regular rate space before
     being saved.
 
@@ -231,82 +221,6 @@ def _copy_all_star(star_version, squeeze_version, measure, gbd_round_id,
     all_data = xr.ufuncs.exp(log_all)
     if not dryrun:
         save_netcdf(all_data, FILEPATH)
-    if make_lex:
-        e0 = create_lex(all_data, squeeze_version, years=years,
-                        gbd_round_id=gbd_round_id, past_version=past_version,
-                        dryrun=dryrun)
-        plot_lex(e0, squeeze_version, gbd_round_id, dryrun=dryrun)
-
-
-def create_lex(mort, version, years, gbd_round_id,
-               past_version=VERSION, dryrun=False):
-    ''' Caclulates shock-subtracted life expectancy for the input all-cause
-    mortality estimates and saves the result to a file under the specified
-    version in FBDPath. At present, uncertainty is not included.
-
-    Args:
-        mort (xarray.DataArray): all-cause mortality estimates in linear rate
-            space
-        version (str): where to save the results, should correspond to where
-            the mortality estimates are being saved
-        gbd_round_id (int): the gbd iteration used to estimate the results
-        past_version (str): the version of the past mortality to calculate past
-            lex from - should also be shock-subtracted
-    '''
-    mort = mort.mean("draw")
-    # get past mort to make lex for all years
-    past_mort = xr.open_dataarray(str(FILEPATH)).sel(
-            year_id=years.past_years,
-            location_id=mort.location_id.values).mean("draw")
-    past_mort = past_mort * xr.DataArray([1, 1, 1], coords=[[-1, 0, 1]],
-                                         dims=["scenario"])
-    mort_all = xr.concat([past_mort, mort], dim="year_id")
-
-    lex_array = lex.gbd4_all_youth(mort_all)['ex'].sel(age_group_id=2).drop(
-            "age_group_id")
-    if not dryrun:
-        save_netcdf(lex_array, FILEPATH)
-    return lex_array
-
-
-def plot_lex(e0, version, gbd_round_id, dryrun=False):
-    '''Plots the input life expectancy over time by location-sex and saves
-    the plots to a pdf under the specified version in FBDPath
-
-    Args:
-        e0 (xarray.DataArray): life-expectancy by country-sex-year-scenario
-        version (str): where to save the resulting pdf
-        gbd_round_id (int): the gbd iteration used to estimate the results
-    '''
-    # plot settings
-    sns.set_style("ticks")
-    colors = {-1: "firebrick", 0: "blue", 1: "forestgreen"}
-    loc_df = db.get_modeled_locations(gbd_round_id)[["location_id",
-                                                     "location_name_short"]]
-    sex_dict = {1: "males", 2: "females"}
-    years = e0.year_id.values.tolist()
-
-    # make the plots
-    pp = PdfPages(str(FILEPATH))
-    for location_id in loc_df.location_id.values:
-        loc_name = loc_df.query("location_id==@location_id")\
-                   .location_name_short.values.tolist()[0]
-        fig, ax = plt.subplots(1, 2, figsize=(10, 4))
-        for sex_id in sex_dict.keys():
-            sex_name = sex_dict[sex_id]
-            for scenario in colors.keys():
-                ax[sex_id-1].plot(years, e0.sel(location_id=location_id,
-                                                scenario=scenario,
-                                                sex_id=sex_id),
-                                  color=colors[scenario])
-            ax[sex_id-1].set_title("e0 for {}, {}".format(loc_name, sex_name))
-        sns.despine()
-        if not dryrun:
-            pp.savefig()
-        plt.close()
-    pp.close()
-
-
 
 
 if __name__ == "__main__":
@@ -324,10 +238,6 @@ if __name__ == "__main__":
     parser.add_argument(
             "--squeeze-version", type=str, required=True,
             help="The mortality version to save the squeezed mortality as.")
-    parser.add_argument(
-            "--make-lex", action="store_true",
-            help=("Whether or not to calculate life expectancy. Only applicable "
-            "if parent_cause == '_all' and for measure == 'death'"))
     parser.add_argument(
             "--measure", type=str, required=True, choices=["yld", "death"],
             help="yld or death.")
