@@ -73,8 +73,7 @@ def aggregate_yhats(acause, input_version, agg_version, measure, period,
     :param str measure: death or yld
     :param str period: future or past
     :param int gbd_round_id: the gbd round providing the past estimates
-    :param bool dryrun: dryrun flag. Don't actually do anything, just pretend
-        like you're doing it.
+    :param bool dryrun: dryrun flag. This is a test run if True.
     """
     y_hat = _get_y_hat(acause, input_version, agg_version, measure, period,
                        draws, gbd_round_id)
@@ -101,8 +100,7 @@ def arima_and_ystar(acause, agg_version, arima_version, smoothing, years,
     :param fbd_core.argparse.YearRange years: a container for the three years
         which define our forecast.
     :param int draws: number of draws to take.
-    :param bool dryrun: dryrun flag. Don't actually do anything, just pretend
-        like you're doing it.
+    :param bool dryrun: dryrun flag. This is a test run if True.
     :param bool bias: Perform log bias correction.
     """
     logger.debug("Opening: {}".format(FILEPATH))
@@ -241,8 +239,8 @@ def _draw_epsilons(epsilon_past, draws, smoothing, years, acause, decay,
     :param xarray.DataArray epsilon_past: past epsilons (error of predictions
         based on data)
     :param int draws: number of draws to grab.
-    :param list[str] smoothing: what dimensions to smooth over during the ARIMA
-        thing.
+    :param list[str] smoothing: what dimensions to smooth over in ARIMA
+        modeling.
     :param fbd_core.argparse.YearRange years: a container for the three years
         which define our forecast.
     :param str acause: the cause to forecast epsilons for
