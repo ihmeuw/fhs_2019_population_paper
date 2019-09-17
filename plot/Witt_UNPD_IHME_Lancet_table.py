@@ -1,15 +1,15 @@
 """
 This code creates a lancet style table for comparison between UNPD,
-Wittgenstein, and IHME forcasts of Total fertility rate, and population in
-millions by country. It can create a superregions only table or all
+Wittgenstein, and IHME forecasts of Total fertility rate, and population in
+millions by country. It can create a super regions only table or all
 regions table.
 
 It takes in 8 command line arguments: 4 population datasets (--fbd-pop,
---witt-pop, --wpp-pop, --wpp-pop-agg), 3 Fertilty rate datasets(--fbd-tfr,
---witt-tfr, --wpp-tfr), and whether the final table should contain superregions
-only or all regions (--supers_only which takes 'y' 'n').
+--witt-pop, --wpp-pop, --wpp-pop-agg), 3 Fertility rate datasets (--fbd-tfr,
+--witt-tfr, --wpp-tfr), and whether the final table should contain super
+regions only or all regions (--supers_only which takes 'y' 'n').
 
-Example usage: python Witt_UNPD_IHME_Lancet_table_edits.py
+Example usage: python Witt_UNPD_IHME_Lancet_table.py
 --fbd-pop population_combined --fbd-tfr tfr_combined
 --wpp-pop 2019_fhs_agg_allage_bothsex_only --wpp-tfr tfr
 --wpp-pop-agg population --witt-pop population_ssp2
@@ -53,17 +53,7 @@ GBD_LOC_DF = get_location_metadata(gbd_round_id=5, location_set_id=35)
 
 def check_locs_array(df):
     """Function used to find and programmatically add in those locations that
-    are in the GBD database but not in UNPD and WITT data
-
-    ARGS:
-    df (dataframe):
-        location dataframe containing location ids to be checked against
-        GBD_LOC_DF
-
-    Returns:
-    df (dataframe):
-        boolean indexed dataframe of whether each location_id is
-        in GBD_LOC_DF"""
+    are in the GBD database but not in UNPD and WITT data"""
     return df["location_id"].isin(GBD_LOC_DF["location_id"])
 
 
@@ -73,7 +63,7 @@ def floating_style(list_nums):
 
     ARGS:
     list_nums (list):
-        list containing numbers to be converted to floating stye period
+        list containing numbers to be converted to floating style period
     Returns:
     floating_style (array):
     array containing numbers converted from standard decimal to floating"""
@@ -89,9 +79,9 @@ def floating_style(list_nums):
 def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
                  wpp_tfr_version, witt_pop_version, witt_tfr_version,
                  wpp_pop_agg_version, supers_only):
-    """Builds a dataframe of IHME, WPP, and Wittgenstein population forcasts
+    """Builds a dataframe of IHME, WPP, and Wittgenstein population forecasts
     to 2100 for the first 3 columns, then the estimated TFR from all 3
-    sources. Returns df of population estimates aggregated using each sources
+    sources. Returns df of population estimates aggregated using each source's
     pop and tfr files, and tfr converted to floating decimal style as required
     by Lancet publication
 
@@ -111,28 +101,28 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     wpp_pop_agg_version (str):
         Name of WPP population file to be used for aggregation
     supers_only (str):
-        'y' or 'n' that denotes whether a superregions only is
+        'y' or 'n' that denotes whether a super regions only is
     wanted or an all regions table
 
     Returns:
     dataframe containing "lancet_label", "ihme_pop_comma", "unpd_pop_comma",
                          "witt_pop_comma", "ihme_tfr_round", "unpd_tfr_round",
                          "witt_tfr_round", "level" """
-    fbdpoppath = FBDPath(f"/5/future/population/20190808"
-                         "_15_ref_85_agg_combined/{fbd_pop_version}.nc")
-    wittpoppath = FBDPath(f"/wittgenstein/future/population/2018_with_under5"
-                          "/{witt_pop_version}.nc")
-    wpppoppath = FBDPath(f"/wpp/future/population/2019_fhs_agg/"
-                         "{wpp_pop_version}.nc")
-    wpp_pop_path_agg = FBDPath(f"/wpp/future/population/2019/"
-                               "{wpp_pop_agg_version}.nc")
+    fbdpoppath = FBDPath("/5/future/population/20190808"
+                         f"_15_ref_85_agg_combined/{fbd_pop_version}.nc")
+    wittpoppath = FBDPath("/wittgenstein/future/population/2018_with_under5"
+                          f"/{witt_pop_version}.nc")
+    wpppoppath = FBDPath("/wpp/future/population/2019_fhs_agg/"
+                         f"{wpp_pop_version}.nc")
+    wpp_pop_path_agg = FBDPath("/wpp/future/population/2019/"
+                               f"{wpp_pop_agg_version}.nc")
 
     # tfr data
-    future_tfr_path = FBDPath(f"/5/future/tfr/20190806_141418_fix_draw_bound_"
-                              "ccfx_to2110_combined/{fbd_tfr_version}.nc")
+    future_tfr_path = FBDPath("/5/future/tfr/20190806_141418_fix_draw_bound_"
+                              f"ccfx_to2110_combined/{fbd_tfr_version}.nc")
     wpptfrpath = FBDPath(f"/wpp/future/tfr/2019/{wpp_tfr_version}.nc")
-    witttfrpath = FBDPath(f"/wittgenstein/future/tfr/2018/"
-                          "{witt_tfr_version}.nc")
+    witttfrpath = FBDPath("/wittgenstein/future/tfr/2018/"
+                          f"{witt_tfr_version}.nc")
 
     if supers_only.lower() == "y":
         final_gbd_locs_df = GBD_LOC_DF.query("level < 2")
@@ -158,7 +148,7 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     witt_tfr_df = witt_tfr_xr.to_dataframe().reset_index()
     witt_tfr_locs = witt_tfr_df["location_id"].drop_duplicates()
     missing_locs_witt = witt_tfr_locs[~check_locs_array(witt_tfr_df)]
-    missing_locs_witt = missing_locs_witt.drop_duplicates("location_id")
+    missing_locs_witt = missing_locs_witt.drop_duplicates()
 
     removed_locs_witt_tfr = witt_tfr_df[check_locs_array(witt_tfr_df)]
     removed_locs_witt_tfr = removed_locs_witt_tfr[~(
@@ -282,7 +272,7 @@ def get_format_obj(
         bold (bool): If cell content needs to be boldened.
 
     Returns:
-        format_obj. xlsxwriter workbook format object with specied format
+        format_obj. xlsxwriter workbook format object with specified format
             properties.
     """
 
@@ -525,7 +515,7 @@ if __name__ == "__main__":
         "--fbd-pop",
         type=str,
         required=True,
-        help="File pathing to future FBD population data. Taken as name of "
+        help="Name of FBD future population data file. Taken as name of "
              "data file \'.nc\' is not required"
     )
     parser.add_argument(
@@ -539,20 +529,20 @@ if __name__ == "__main__":
         "--wpp-pop",
         type=str,
         required=True,
-        help="File pathing for WPP future pop data. Taken as name of data "
+        help="Name of WPP future pop data file. Taken as name of data "
              "file \'.nc\' is not required"
     )
     parser.add_argument(
         "--wpp-tfr",
         type=str,
         required=True,
-        help="File pathing for WPP future tfr data. Taken as name of data "
+        help="Name of WPP future tfr data file. Taken as name of data "
              "file \'.nc\' is not required"
     )
     parser.add_argument(
         "--wpp-pop-agg",
         type=str,
-        help=("File pathing for WPP population data. Note at time of code "
+        help=("Name of WPP population data file. Note at time of code "
               "writing this had to be a different file due to aggregates "
               "having to be run on WPP pop file and only available population "
               "dataset had aggregates already run on it using IHME pop file. "
@@ -563,14 +553,14 @@ if __name__ == "__main__":
         "--witt-pop",
         type=str,
         required=True,
-        help="File pathing for WITT future pop data. Taken as name of data "
+        help="Name of WITT future pop data file. Taken as name of data "
              "file \'.nc\' is not required"
     )
     parser.add_argument(
         "--witt-tfr",
         type=str,
         required=True,
-        help="File pathing for WITT future tfr data. Taken as name of data "
+        help="Name of WITT future tfr data file. Taken as name of data "
              "file \'.nc\' is not required"
     )
 
