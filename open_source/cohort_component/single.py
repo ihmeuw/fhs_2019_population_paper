@@ -33,21 +33,8 @@ made for forward projection.
        an approximation that takes a geometric mean of survivals,
        :math:`({}_np_{x+n}\:{}_np_x)^{1/2}`.
 
- #. Migration data comes from Wittgenstein. We expect to use IHME-generated
-    migration numbers soon, and that's a matter of reading and formatting
-    the data.
+ #. Migration data is internally computed.  Please refer to the migration/ folder.
 
-    #. Interpolation uses a cubic spline constrained to be monotonic,
-       but that doesn't have a smooth second derivative. We have code
-       to generate interpolation using a more statistical model called
-       a penalized composite linear model (PCLM).
-
-    #. Migration data is either spread evenly over age intervals
-       or made proportional to population within an age group. This
-       spreads it evenly over age intervals.
-
-    #. Migration data can be counts of individuals or rates. This assumes
-       counts of individuals.
 
  #. Age-specific fertility rates (ASFR) come from IHME data, are on five-year
     time steps and GBD intervals. There are several methods for interpolation.
