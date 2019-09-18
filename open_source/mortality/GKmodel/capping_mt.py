@@ -1,5 +1,5 @@
 """
-This is for capping maternal_hiv in GK"
+This is for capping maternal_hiv, maternal_indirect and drug causes in GK"
 """
 from collections import namedtuple
 import pdb

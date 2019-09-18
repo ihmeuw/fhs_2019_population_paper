@@ -11,8 +11,7 @@ from sqlalchemy.orm import sessionmaker
 def make_run_log_file(version):
     """
     Right now just copies the settings file to the output directory so
-    people can see which versions and whatnot were used. Eventually would like
-    to add the commit # and branch
+    people can see which versions and whatnot were used.
 
     Args:
         version (str): version name where the current mortality run is to be
