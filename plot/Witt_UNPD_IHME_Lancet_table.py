@@ -2,18 +2,18 @@
 This code creates a lancet style table for comparison between UNPD,
 Wittgenstein, and IHME forecasts of Total fertility rate, and population in
 millions by country. It can create a super regions only table or all
-regions table.
+regions table. Currently outputs a xlsx file in the same directory as
+the script
 
-It takes in 8 command line arguments: 4 population datasets (--fbd-pop,
---witt-pop, --wpp-pop, --wpp-pop-agg), 3 Fertility rate datasets (--fbd-tfr,
+It takes in 7 command line arguments: 3 population datasets (--fbd-pop,
+--witt-pop, --wpp-pop), 3 Fertility rate datasets (--fbd-tfr,
 --witt-tfr, --wpp-tfr), and whether the final table should contain super
 regions only or all regions (--supers_only which takes 'y' 'n').
 
 Example usage: python Witt_UNPD_IHME_Lancet_table.py
 --fbd-pop population_combined --fbd-tfr tfr_combined
---wpp-pop 2019_fhs_agg_allage_bothsex_only --wpp-tfr tfr
---wpp-pop-agg population --witt-pop population_ssp2
---witt-tfr tfr --supers-only n
+--wpp-pop 2019_fhs_agg --wpp-tfr 2019_fhs_agg --witt-pop 2018_fhs_agg
+--witt-tfr 2018_fhs_agg --supers-only n
 
 written by Sam Farmer and Julian Chalek
 """
@@ -22,9 +22,8 @@ import pandas as pd
 import xlsxwriter
 
 from db_queries import get_location_metadata
-from fbd_core import YearRange, db, argparse
+from fbd_core import YearRange, argparse
 from fbd_core.file_interface import FBDPath, open_xr
-from fbd_core.etl import aggregator
 from datetime import datetime
 
 
@@ -47,7 +46,7 @@ INDENT_MAP = {
     2: "    ",
     3: "      "
 }
-# Query gbd shared tables and get locations
+# Query gbd shared tables and get locations needed
 GBD_LOC_DF = get_location_metadata(gbd_round_id=5, location_set_id=35)
 
 
@@ -69,7 +68,7 @@ def floating_style(list_nums):
     array containing numbers converted from standard decimal to floating"""
     floating_style = []
     for num in list_nums:
-        str_num = str(num)
+        str_num = "%.2f" % round(num, 2)
         per_idx = str_num.find(".", 0, len(str_num))
         format_num = str_num[:per_idx]+"\u00b7"+str_num[per_idx+1:per_idx+3]
         floating_style.append(format_num)
@@ -78,7 +77,7 @@ def floating_style(list_nums):
 
 def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
                  wpp_tfr_version, witt_pop_version, witt_tfr_version,
-                 wpp_pop_agg_version, supers_only):
+                 supers_only):
     """Builds a dataframe of IHME, WPP, and Wittgenstein population forecasts
     to 2100 for the first 3 columns, then the estimated TFR from all 3
     sources. Returns df of population estimates aggregated using each source's
@@ -108,21 +107,27 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     dataframe containing "lancet_label", "ihme_pop_comma", "unpd_pop_comma",
                          "witt_pop_comma", "ihme_tfr_round", "unpd_tfr_round",
                          "witt_tfr_round", "level" """
+
     fbdpoppath = FBDPath("/5/future/population/20190808"
                          f"_15_ref_85_agg_combined/{fbd_pop_version}.nc")
-    wittpoppath = FBDPath("/wittgenstein/future/population/2018_with_under5"
-                          f"/{witt_pop_version}.nc")
-    wpppoppath = FBDPath("/wpp/future/population/2019_fhs_agg/"
-                         f"{wpp_pop_version}.nc")
-    wpp_pop_path_agg = FBDPath("/wpp/future/population/2019/"
-                               f"{wpp_pop_agg_version}.nc")
+
+    wittpoppath = FBDPath(f"/wittgenstein/future/population/{witt_pop_version}"
+                          "/population.nc")
+
+    wpppoppath = FBDPath(f"/wpp/future/population/{wpp_pop_version}/"
+                         "population_all_age.nc")
+
+    # wpp_pop_path_agg = FBDPath("/wpp/future/population/2019/"
+    #                           f"{wpp_pop_agg_version}.nc")
 
     # tfr data
     future_tfr_path = FBDPath("/5/future/tfr/20190806_141418_fix_draw_bound_"
                               f"ccfx_to2110_combined/{fbd_tfr_version}.nc")
-    wpptfrpath = FBDPath(f"/wpp/future/tfr/2019/{wpp_tfr_version}.nc")
-    witttfrpath = FBDPath("/wittgenstein/future/tfr/2018/"
-                          f"{witt_tfr_version}.nc")
+
+    wpptfrpath = FBDPath(f"/wpp/future/tfr/{wpp_tfr_version}/tfr.nc")
+
+    witttfrpath = FBDPath(f"/wittgenstein/future/tfr/{witt_tfr_version}"
+                          "/tfr.nc")
 
     if supers_only.lower() == "y":
         final_gbd_locs_df = GBD_LOC_DF.query("level < 2")
@@ -138,64 +143,11 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     witt_tfr_xr = open_xr(witttfrpath).data
     fut_fertility = open_xr(future_tfr_path).data
 
-    # Checking the locations for all data so they can be combined later on
-    # with all the same locations
-    wpp_pop_df = wpp_pop_xr.to_dataframe().reset_index()
-    witt_pop_df = witt_pop_xr.to_dataframe().reset_index()
-
-    wpp_pop_df = wpp_pop_df["location_id"].drop_duplicates()
-    witt_pop_df = witt_pop_df["location_id"].drop_duplicates()
-    witt_tfr_df = witt_tfr_xr.to_dataframe().reset_index()
-    witt_tfr_locs = witt_tfr_df["location_id"].drop_duplicates()
-    missing_locs_witt = witt_tfr_locs[~check_locs_array(witt_tfr_df)]
-    missing_locs_witt = missing_locs_witt.drop_duplicates()
-
-    removed_locs_witt_tfr = witt_tfr_df[check_locs_array(witt_tfr_df)]
-    removed_locs_witt_tfr = removed_locs_witt_tfr[~(
-        removed_locs_witt_tfr["location_id"] == 354)]
-    removed_locs_witt_tfr = removed_locs_witt_tfr[~(
-        removed_locs_witt_tfr["location_id"] == 361)]
-
-    witt_tfr_with_locsxr = removed_locs_witt_tfr.set_index(
-        ["location_id", "year_id"]).to_xarray()["rate"]
-
-    # Calculate aggs for WITT pop data
-    locs = db.get_locations_by_max_level(3)
-    hierarchy = locs[["location_id",
-                      "parent_id"]].set_index(
-                      "location_id").to_xarray().parent_id
-
-    agg_witt_pop = aggregator.Aggregator(witt_pop_xr)
-    agg_witt_pop.aggregate_locations(loc_hierarchy=hierarchy, data=witt_pop_xr)
-    witt_pop_da = agg_witt_pop.pop
-    witt_pop_allage = witt_pop_da.sel(age_group_id=22, sex_id=3)
-
-    wpp_pop_xr_aggs = open_xr(wpp_pop_path_agg).data
-
-    # Calculate the UNPD TFR aggregates
-    wpp_pop_2 = wpp_pop_xr_aggs.sel(sex_id=2)
-    wpp_pop_2 = wpp_pop_2.rename(dict(age_group_name="age_group_id"))
-    age_group_ids = [1] + list(range(6, 21)) + [30, 31, 32, 235]
-    wpp_pop_2["age_group_id"] = age_group_ids
-    wpp_pop_fert = wpp_pop_2.sel(
-        age_group_id=range(7, 15 + 1)).sum("age_group_id")
-    agg = aggregator.Aggregator(wpp_pop_fert)
-    wpp_tfr_agg = agg.aggregate_locations(hierarchy, data=wpp_tfr_xr).rate
-
-    # Calculate the WITT TFR aggregates
-    witt_pop_2 = witt_pop_da.sel(sex_id=2)
-    witt_pop_fert = (witt_pop_2.sel(
-        age_group_id=range(7, 15 + 1),
-        year_id=range(1990, 2100, 5)).sum("age_group_id"))
-    agg = aggregator.Aggregator(witt_pop_fert)
-    witt_tfr_agg = agg.aggregate_locations(
-        hierarchy, data=witt_tfr_with_locsxr).rate.drop("sex_id").squeeze()
-
     # condense down to only the data we are interested in
-    witt_tfr_100 = witt_tfr_agg.sel(
+    witt_tfr_100 = witt_tfr_xr.sel(
         year_id=ext_year).drop(
         "year_id").squeeze().rename("witt_tfr").to_dataframe().reset_index()
-    wpp_tfr_100 = wpp_tfr_agg.sel(
+    wpp_tfr_100 = wpp_tfr_xr.sel(
        year_id=ext_year).drop(["year_id", "sex_id"]).squeeze().rename(
        "unpd_tfr").to_dataframe().reset_index()
     ihme_tfr_100 = fut_fertility.sel(
@@ -203,12 +155,17 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
         ["year_id", "scenario",
          "quantile"]).squeeze().to_dataframe().reset_index()
 
-    witt_pop_100 = witt_pop_allage.sel(year_id=2100).drop(
+    witt_pop_100 = witt_pop_xr.sel(year_id=2100,
+                                   age_group_id=22,
+                                   sex_id=3).drop(
         ["year_id", "sex_id", "age_group_id"]).squeeze().rename(
         "witt_pop").to_dataframe().reset_index()
-    wpp_pop_100 = wpp_pop_xr.sel(year_id=2100).drop(
+
+    wpp_pop_100 = wpp_pop_xr.sel(year_id=2100,
+                                 sex_id=3).drop(
         ["year_id", "sex_id", "age_group_id"]).squeeze().rename(
-        "unpd_pop").to_dataframe().reset_index().drop("scenario", axis=1)
+        "unpd_pop").to_dataframe().reset_index()
+
     ihme_pop_100 = open_xr(fbdpoppath).data.sel(
         age_group_id=22, sex_id=3, scenario=0, year_id=2100,
         quantile="mean").drop(
@@ -219,9 +176,9 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     witt_pop_100["witt_pop_int"] = witt_pop_100["witt_pop"].astype(int)
     wpp_pop_100["unpd_pop_int"] = wpp_pop_100["unpd_pop"].astype(int)
 
-    witt_tfr_100["witt_tfr_round"] = witt_tfr_100.witt_tfr.round(2)
-    wpp_tfr_100["unpd_tfr_round"] = wpp_tfr_100.unpd_tfr.round(2)
-    ihme_tfr_100["ihme_tfr_round"] = ihme_tfr_100.ihme_tfr.round(2)
+    witt_tfr_100["witt_tfr_round"] = floating_style(witt_tfr_100.witt_tfr)
+    wpp_tfr_100["unpd_tfr_round"] = floating_style(wpp_tfr_100.unpd_tfr)
+    ihme_tfr_100["ihme_tfr_round"] = floating_style(ihme_tfr_100.ihme_tfr)
 
     # create new column of strings that are the pop data for each dataset put
     # into comma format eg 100,000
@@ -256,9 +213,8 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     return (final_df)
 
 
-def get_format_obj(
-    workbook, font_name="Times New Roman", font_size=8,
-        bg_color="#FFFFFF", align=True, bold=False):
+def get_format_obj(workbook, font_name="Times New Roman", font_size=8,
+                   bg_color="#FFFFFF", align=True, bold=False):
     """Utility function to dynamically create cell formatting options.
 
     Args:
@@ -304,7 +260,7 @@ def write_header(worksheet, curr_row, cols, data_cols,
         data_cols(Series): Row containing data to be written.
         header_format(xlsxwriter Format object): Cell format options for
             headers.
-        stages (list):  'tfr', 'pop' etc.
+        stages (list):  'tfr', 'pop'
         years (YearRange): YearRange object. Ex: YearRange(2010, 2017, 2020).
     Returns:
         int: An integer specifying the row number following the header.
@@ -485,10 +441,10 @@ def write_table(final_df, outfile, stages, years, col_name_map, supers_only):
 
 def main(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
          wpp_tfr_version, witt_pop_version, witt_tfr_version,
-         wpp_pop_agg_version, supers_only):
+         supers_only):
     final_df = compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
                             wpp_tfr_version, witt_pop_version,
-                            witt_tfr_version, wpp_pop_agg_version, supers_only)
+                            witt_tfr_version, supers_only)
 
     outfile = (f"Combined_table_pb33_lancet_label_%s.xlsx"
                % (datetime.now().strftime("%Y-%m-%d_%H%M%S")))
@@ -516,60 +472,49 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Name of FBD future population data file. Taken as name of "
-             "data file \'.nc\' is not required"
+             "directory data file is found in \'.nc\' is not required"
     )
     parser.add_argument(
         "--fbd-tfr",
         type=str,
         required=True,
-        help="File pathing to FBD future tfr data. Taken as name of data "
-             "file \'.nc\' is not required"
+        help="File pathing to FBD future tfr data. Taken as name of "
+             "directory data file is found in \'.nc\' is not required"
     )
     parser.add_argument(
         "--wpp-pop",
         type=str,
         required=True,
-        help="Name of WPP future pop data file. Taken as name of data "
-             "file \'.nc\' is not required"
+        help="Name of WPP future pop data file. Taken as name of "
+             "directory data file is found in \'.nc\' is not required"
     )
     parser.add_argument(
         "--wpp-tfr",
         type=str,
         required=True,
-        help="Name of WPP future tfr data file. Taken as name of data "
-             "file \'.nc\' is not required"
-    )
-    parser.add_argument(
-        "--wpp-pop-agg",
-        type=str,
-        help=("Name of WPP population data file. Note at time of code "
-              "writing this had to be a different file due to aggregates "
-              "having to be run on WPP pop file and only available population "
-              "dataset had aggregates already run on it using IHME pop file. "
-              "May not be needed in future. Taken as name of data file "
-              "\'.nc\' is not required")
+        help="Name of WPP future tfr data file. Taken as name of "
+             "directory data file is found in \'.nc\' is not required"
     )
     parser.add_argument(
         "--witt-pop",
         type=str,
         required=True,
-        help="Name of WITT future pop data file. Taken as name of data "
-             "file \'.nc\' is not required"
+        help="Name of WITT future pop data file. Taken as name of "
+             "directory data file is found in \'.nc\' is not required"
     )
     parser.add_argument(
         "--witt-tfr",
         type=str,
         required=True,
-        help="Name of WITT future tfr data file. Taken as name of data "
-             "file \'.nc\' is not required"
+        help="Name of WITT future tfr data file. Taken as name of "
+             "directory data file is found in \'.nc\' is not required"
     )
-
     parser.add_argument(
         "--supers-only",
         type=str,
         required=True,
-        help=("\'Y\' if desired table includes only global and superregions. "
-              "\'N\" if desired table includes all regions")
+        help=("\'y\' if desired table includes only global and superregions. "
+              "\'n\" if desired table includes all regions")
     )
 
     args = parser.parse_args()
@@ -577,4 +522,4 @@ if __name__ == "__main__":
     main(fbd_pop_version=args.fbd_pop, fbd_tfr_version=args.fbd_tfr,
          wpp_pop_version=args.wpp_pop, wpp_tfr_version=args.wpp_tfr,
          witt_pop_version=args.witt_pop, witt_tfr_version=args.witt_tfr,
-         wpp_pop_agg_version=args.wpp_pop_agg, supers_only=args.supers_only)
+         supers_only=args.supers_only)
