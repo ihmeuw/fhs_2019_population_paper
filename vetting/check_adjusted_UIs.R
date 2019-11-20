@@ -17,12 +17,12 @@ TFR_VERSIONS <- c(
     "20190806_141418_fix_draw_bound_ccfx_to2110_uncertainty_adjusted",
     "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped_uncertainty_adjusted",
     "20190807_163915_fix_draw_bound_ccfx_99th_to2110_uncertainty_adjusted",
-    "20190806_141418_fix_draw_bound_ccfx_to2110_uncertainty_adjusted_combined",
+    "20190806_141418_fix_draw_bound_ccfx_to2110_combined",
     "20190807_163915_fix_draw_bound_ccfx_99th_to2110_combined",
     "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped_combined",
-    "20190806_141418_fix_draw_bound_ccfx_to2110_addsex_ordered_20191118",
-    "20190807_163915_fix_draw_bound_ccfx_99th_to2110_addsex_ordered_20191118",
-    "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped_addsex_ordered_20191118"
+    "20190806_141418_fix_draw_bound_ccfx_to2110_addsex_ordered",
+    "20190807_163915_fix_draw_bound_ccfx_99th_to2110_addsex_ordered",
+    "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped_addsex_ordered"
 )
 
 POP_VERSIONS <- c(
@@ -94,7 +94,7 @@ tfrs <- foreach(v = TFR_VERSIONS, .combine = "bind_rows") %do% {
                                   drop_scenario = FALSE, filename = "tfr_agg_quantile.nc")
         d_quantile$quantile <- ifelse(d_quantile$quantile == 0.025, "lower", "upper")
         d <- bind_rows(d_mean, d_quantile)
-        d$type <- ifelse(type == "20191118", "Ordered", "Unordered")
+        d$type <- ifelse(type == "ordered", "Ordered", "Unordered")
     }
     d$version <- v
     d$Scenario <- factor(d$scenario, levels = -1:1, labels = tfr_scenario_labels(v))
@@ -149,20 +149,20 @@ pops_list <- foreach(v = POP_VERSIONS, .combine = "c") %do% {
         d <- xarray_to_R(stage = "population", past_or_future = "future",
                          gbd_round_id = 5L, version = v, drop_scenario = FALSE,
                          filename = "population_combined.nc",
-                         select_sid = 3, select_age_group_ids = 23)
+                         select_sid = 3, select_age_group_ids = 22)
         d$type <- "Combined"
     } else if (type == "adjusted") {
         d <- xarray_to_R(stage = "population", past_or_future = "future",
                          gbd_round_id = 5L, version = v, drop_scenario = FALSE,
                          filename = "population_agg_adjusted.nc",
-                         select_sid = 3, select_age_group_ids = 23)
+                         select_sid = 3, select_age_group_ids = 22)
         d$type <- "Adjusted"
     } else {
         d <- xarray_to_R_summaries(stage = "population",
                                    past_or_future = "future",
                                    gbd_round_id = 5L, version = v,
                                    filename = "population_agg.nc", test = FALSE,
-                                   select_sid = 3, select_age_group_ids = 23)
+                                   select_sid = 3, select_age_group_ids = 22)
         d$type <- ifelse(type == "ordered", "Ordered", "Unordered")
         if ("population" %in% names(d))
             names(d)[names(d) == "population"] <- "value"
