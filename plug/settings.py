@@ -97,10 +97,12 @@ SDG_SCENARIO_VERSIONS = dict(
 PAST_VERSIONS = dict(
   population=VersionGBDRoundID("20181206_pop_1950_2017", 5),
   lex=VersionGBDRoundID("20190726_fhs_computed_from_20190109_version90_etl", 5),
+  tfr=VersionGBDRoundID("20190109_va84", 5)
 )
 
 WPP_VERSIONS = dict(
   population=VersionGBDRoundID("2019", "wpp"),
+  population_aggs=VersionGBDRoundID("2019_with_under5_our_aggs", "wpp"),
 )
 
 WITT_VERSIONS = dict(
