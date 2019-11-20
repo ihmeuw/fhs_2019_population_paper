@@ -8,12 +8,12 @@ the script
 It takes in 7 command line arguments: 3 population datasets (--fbd-pop,
 --witt-pop, --wpp-pop), 3 Fertility rate datasets (--fbd-tfr,
 --witt-tfr, --wpp-tfr), and whether the final table should contain super
-regions only or all regions (--supers_only which takes 'y' 'n').
+regions only or all regions (--supers_only).
 
 Example usage: python Witt_UNPD_IHME_Lancet_table.py
 --fbd-pop population_combined --fbd-tfr tfr_combined
 --wpp-pop 2019_fhs_agg --wpp-tfr 2019_fhs_agg --witt-pop 2018_fhs_agg
---witt-tfr 2018_fhs_agg --supers-only n
+--witt-tfr 2018_fhs_agg --supers-only
 
 written by Sam Farmer and Julian Chalek
 """
@@ -108,8 +108,8 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
                          "witt_pop_comma", "ihme_tfr_round", "unpd_tfr_round",
                          "witt_tfr_round", "level" """
 
-    fbdpoppath = FBDPath("/5/future/population/20190808"
-                         f"_15_ref_85_agg_combined/{fbd_pop_version}.nc")
+    fbdpoppath = FBDPath(f"/5/future/population/{fbd_pop_version}/"
+                         "population_combined.nc")
 
     wittpoppath = FBDPath(f"/wittgenstein/future/population/{witt_pop_version}"
                           "/population.nc")
@@ -121,15 +121,15 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     #                           f"{wpp_pop_agg_version}.nc")
 
     # tfr data
-    future_tfr_path = FBDPath("/5/future/tfr/20190806_141418_fix_draw_bound_"
-                              f"ccfx_to2110_combined/{fbd_tfr_version}.nc")
+    future_tfr_path = FBDPath(f"/5/future/tfr/{fbd_tfr_version}/"
+                              "tfr_combined.nc")
 
     wpptfrpath = FBDPath(f"/wpp/future/tfr/{wpp_tfr_version}/tfr.nc")
 
     witttfrpath = FBDPath(f"/wittgenstein/future/tfr/{witt_tfr_version}"
                           "/tfr.nc")
 
-    if supers_only.lower() == "y":
+    if supers_only:
         final_gbd_locs_df = GBD_LOC_DF.query("level < 2")
     else:
         final_gbd_locs_df = GBD_LOC_DF.query("level < 4")
@@ -381,7 +381,7 @@ def write_table(final_df, outfile, stages, years, col_name_map, supers_only):
             )
         end_row = curr_row + CELL_HT["data_cols"]
         col_idx = 0
-        if supers_only.lower() == "y":
+        if supers_only:
             if row["level"] > 3:
                 loc_fmt_obj = get_format_obj(
                     workbook, font_size=11,
@@ -445,9 +445,12 @@ def main(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     final_df = compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
                             wpp_tfr_version, witt_pop_version,
                             witt_tfr_version, supers_only)
-
-    outfile = (f"Combined_table_pb33_lancet_label_%s.xlsx"
-               % (datetime.now().strftime("%Y-%m-%d_%H%M%S")))
+    if supers_only:
+        outfile = (f"Combined_table_super_regions_%s.xlsx"
+                   % (datetime.now().strftime("%Y-%m-%d_%H%M")))
+    else:
+        outfile = (f"Combined_table_country_level_%s.xlsx"
+                   % (datetime.now().strftime("%Y-%m-%d_%H%M")))
     stages = ["pop", "tfr"]
     year_ids = YearRange(1990, 2018, 2100)
 
@@ -511,10 +514,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--supers-only",
-        type=str,
-        required=True,
-        help=("\'y\' if desired table includes only global and superregions. "
-              "\'n\" if desired table includes all regions")
+        action="store_true",
+        help=("include if desired table includes only global and superregions."
+              " omit if desired table includes all regions")
     )
 
     args = parser.parse_args()
