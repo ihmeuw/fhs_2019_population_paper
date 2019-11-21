@@ -82,10 +82,10 @@ SDG_SCENARIO_VERSIONS = dict(
   hiv=VersionGBDRoundID("20190720_hiv_20190104_ref_only", 5),
   shocks=VersionGBDRoundID("20190606_ldi_fix", 5),
   death=VersionGBDRoundID(
-    "20190621_gk_for_pop_scenarios_fix_indirect_squeezed", 5),
-  population=VersionGBDRoundID("20190808_sdg_ref_15_agg", 5),
-  population_mean_ui=VersionGBDRoundID("20190808_sdg_ref_15_agg_combined", 5),
-  lex=VersionGBDRoundID("20190808_sdg_ref_15_agg", 5),
+    "20191106_sdg_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all", 5),
+  population=VersionGBDRoundID("20191106_sdg_ref_15_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all", 5),
+  population_mean_ui=VersionGBDRoundID("20191106_sdg_ref_15_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all_combined", 5),
+  lex=VersionGBDRoundID("20191106_sdg_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all_gbd4_extrap", 5),
   migration=VersionGBDRoundID("20190801_20190607_arima_cap", 5),
   tfr=VersionGBDRoundID(
     "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped", 5),
