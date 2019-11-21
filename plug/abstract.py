@@ -33,7 +33,6 @@ from fbd_core.etl.transformation import expand_dimensions
 from fbd_core.file_interface import FBDPath, open_xr, save_xr
 
 import sys
-
 sys.path.append(".")
 
 import settings
