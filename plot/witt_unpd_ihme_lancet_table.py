@@ -77,8 +77,9 @@ def floating_style(list_nums):
 
 def large_number_float(series):
     new_nums = series.apply(
-        lambda x: str(x)[:len(str(x))-4]).apply(
-            lambda x: x[:-2] + "." + x[-2:])
+        lambda x: str(x)[:len(str(x))-3]).apply(
+        lambda x: x[:-3] + "." + x[-3:]).apply(
+        lambda x: round(float(x), 2))
     return(new_nums.map(
         lambda x: "".join(["\u00b7" if c == "." else c for c in str(x)])))
 
