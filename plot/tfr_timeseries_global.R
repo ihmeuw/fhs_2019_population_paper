@@ -1,66 +1,54 @@
 ###############################################################################
 # Author: Emily Goren based on some code from Julian Chalek
-# Date: 8/09/2019 with update 11/19/2019
+# Date: 8/09/2019 with update 11/19/2019 and another on 12/6/2019 to pull all
+# 5 scenarios from one file
 # TFR time series panel plots
 ###############################################################################
 
 rm(list=ls())
 library(data.table)
-library(tidyverse)
+library(tidyverse, lib.loc = "/ihme/forecasting/shared/r")
 library(mortdb, lib.loc = "/ihme/mortality/shared/r/")
 library(ncdf4, lib.loc = "/ihme/forecasting/shared/r")
 library(ncdf4.helpers, lib.loc = "/ihme/forecasting/shared/r")
 source("/ihme/homes/egoren/repos/fhs_miscellaneous/egoren/utils/xarray-input.R")
 source("/ihme/cc_resources/libraries/current/r/get_covariate_estimates.R")
 
-# Paths
+# Paths and globals
 FBD_DIR  <- "/ihme/forecasting/data/5/future"
 PLT_DIR  <- "/ihme/forecasting/plot/5/future"
 WPP_DIR  <- "/home/j/WORK/02_fertilitypop/fertility/gbd_2019/forecasting/data"
-save_version <- "20190806_141418_fix_draw_bound_ccfx_to2110"
-base <- "20190806_141418_fix_draw_bound_ccfx_to2110_combined"
-sdg <- "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped_combined"
-fastest <- "20190807_163915_fix_draw_bound_ccfx_99th_to2110_combined"
-forecast_start <- 2018
+VERSION <- "20190806_141418_fix_draw_bound_ccfx_to2110_5_scen_combined"
+FORECAST_START <- 2018
+LABELS <- list(
+    `-1` = "Slower Contraception Met Need and Education Pace",
+    `0` = "Reference with 95% UI",
+    `1` = "Faster Contraception Met Need and Education Pace",
+    `2` = "Fastest Contraception Met Need and Education Pace",
+    `3` = "SDG Contraception Met Need and Education Pace")
 
-# location data
-locs <- mortdb::get_locations(level = "all", gbd_year = 2017) %>%
+# location data, still using demography's location db
+locs <- mortdb::get_locations(level = "all", gbd_year = FORECAST_START - 1) %>%
   filter(level <= 3 ) %>%
   select(c("location_id", "location_name", "ihme_loc_id"))
 
 
-# Base scenarios
 get_tfr_data <- function(version, labs) {
-  tfrdat <- "tfr_combined.nc"
-  #tfrmean <- "tfr_agg_mean.nc"
-  #tfrq <- "tfr_agg_quantile.nc"
-  dat <- data.table(xarray_nc_to_R(sprintf("%s/tfr/%s/%s", FBD_DIR, version, tfrdat)))
-  est <- dat[quantile == "mean"] #xarray_nc_to_R(sprintf("%s/tfr/%s/%s", FBD_DIR, version, tfrmean))
-  UI <- dat[quantile != "mean"] #xarray_nc_to_R(sprintf("%s/tfr/%s/%s", FBD_DIR, version, tfrq))
+  #filename <- "tfr_combined.nc"
+  filename <- "test_tfr_agg_combined.nc"
+  dat <- data.table(xarray_nc_to_R(
+      sprintf("%s/tfr/%s/%s", FBD_DIR, version, filename)))
+  est <- dat[quantile == "mean"]
+  UI <- dat[quantile != "mean"]
   UI <- UI %>% spread(quantile, value)
   all <- merge(est, UI, by = c("scenario", "year_id", "location_id"))
   all <- all %>%
-    mutate(Scenario = recode(scenario, `-1` = labs$`-1`, `0` = labs$`0`, `1` = labs$`1`))
+    mutate(Scenario = ordered(
+        scenario, levels = as.numeric(names(labs)), labels = unlist(labs)))
   return(all)
 }
 
-labs_base <- list(
-  `-1` = "Slower Contraception Met Need and Education Pace",
-  `0` = "Reference with 95% UI",
-  `1` =  "Faster Contraception Met Need and Education Pace")
-labs_sdg  <- list(
-  `-1` = "SDG Contraception Met Need and Education Pace",
-  `0` = "DROP",
-  `1` =  "DROP")
-labs_fastest  <-  list(
-  `-1` = "DROP",
-  `0` = "DROP",
-  `1` =  "Fastest Contraception Met Need and Education Pace")
-d_base <- get_tfr_data(base, labs_base)
-d_sdg <- get_tfr_data(sdg, labs_sdg)
-d_fastest <- get_tfr_data(fastest, labs_fastest)
-d_future <- rbind(d_base, d_sdg, d_fastest) %>% #d_sdg, d_fastest) %>%
-  filter(Scenario != "DROP") %>%
+d_future <- get_tfr_data(VERSION, LABELS) %>%
   rename(mean = value) %>%
   left_join(locs, by = c("location_id"))
 
@@ -73,7 +61,7 @@ d_past <- get_covariate_estimates(covariate_id=149, gbd_round_id=5,
                                   status = "best")
 
 d_past <- d_past %>%
-  filter(year_id < forecast_start & location_id %in% locs$location_id) %>%
+  filter(year_id < FORECAST_START & location_id %in% locs$location_id) %>%
   mutate(scenario = 0,
          Scenario = "Reference with 95% UI") %>%
   select(-c(model_version_id, covariate_id,
@@ -86,8 +74,8 @@ d_past <- d_past %>%
 d <- rbind(data.table(d_future), data.table(d_past), fill = TRUE) %>%
   filter(year_id %in% 1990:2100) %>%
   arrange(location_id, Scenario, year_id)
-d$lower <- ifelse(d$year_id < forecast_start, d$mean, d$lower)
-d$upper <- ifelse(d$year_id < forecast_start, d$mean, d$upper)
+d$lower <- ifelse(d$year_id < FORECAST_START, d$mean, d$lower)
+d$upper <- ifelse(d$year_id < FORECAST_START, d$mean, d$upper)
 
 # Plot
 
@@ -105,11 +93,12 @@ d$Scenario <- ordered(d$Scenario, levels = scen_labs, labels = scen_labs)
 
 
 theme_set(theme_bw(base_size = 14))
-pdf(sprintf("%s/ccf/%s/tfr_time_series_all_scenarios_agg_RESUB_refUI.pdf", PLT_DIR, save_version),
+pdf(sprintf("%s/tfr/%s/tfr_time_series_all_scenarios_agg_refUI.pdf", PLT_DIR, VERSION),
     width = 15, height = 8)
-for (l in unique(d$location_name)) {
-  dl <- d %>% filter(location_name == l) %>% droplevels()
+for (l in sort(unique(d$location_id))) {
+  dl <- d %>% filter(location_id == l) %>% droplevels()
   tf <- dl %>% filter(year_id == 2100 & Scenario == "Reference with 95% UI")
+  locname <- unique(dl$location_name)
   plt <- ggplot() +
     geom_line(data = dl,
               mapping = aes(x=year_id, y=mean, color=Scenario), size = 1) +
@@ -118,7 +107,7 @@ for (l in unique(d$location_name)) {
     geom_line(size=1) +
     geom_vline(xintercept = 2017, linetype="dashed", color = "black") +
     scale_color_manual(values = cols) +
-    ggtitle(sprintf("%s: reference TFR in 2100: %s", l, round(tf$mean,3))) +
+    ggtitle(sprintf("%s: reference TFR in 2100: %s", locname, round(tf$mean,3))) +
     ylab("Total Fertility Rate") +
     xlab("Year") +
     expand_limits(y = 0) +
@@ -135,7 +124,7 @@ for (l in unique(d$location_name)) {
 dev.off()
 
 cairo_pdf(
-  sprintf("%s/ccf/%s/tfr_time_series_all_scenarios_agg_RESUB_GLOBALonly-final_refUI.pdf", PLT_DIR, save_version),
+  sprintf("%s/tfr/%s/tfr_time_series_all_scenarios_agg_GLOBALonly-_refUI.pdf", PLT_DIR, VERSION),
   width = 15, height = 8)
   dl <- d %>% filter(location_name == "Global") %>% droplevels()
   ggplot() +
