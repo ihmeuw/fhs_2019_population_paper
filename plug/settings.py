@@ -33,13 +33,13 @@ BASELINE_VERSIONS = dict(
   hiv=VersionGBDRoundID("20190720_hiv_20190104_ref_only", 5),
   shocks=VersionGBDRoundID("20191108_shocks_only_decay_weight_15", 5),
   death=VersionGBDRoundID("20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all", 5),
-  population=VersionGBDRoundID("20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all", 5),
-  population_mean_ui=VersionGBDRoundID("20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all_combined", 5),
-  lex=VersionGBDRoundID("20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all_gbd4_extrap", 5),
+  population=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all", 5),
+  population_mean_ui=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_combined", 5),
+  lex=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_gbd4_extrap", 5),
   migration=VersionGBDRoundID("20190801_20190607_arima_cap", 5),
-  tfr=VersionGBDRoundID("20190806_141418_fix_draw_bound_ccfx_to2110", 5),
+  tfr=VersionGBDRoundID("20190806_141418_fix_draw_bound_ccfx_to2110_5_scen", 5),
   tfr_mean_ui=VersionGBDRoundID(
-    "20190806_141418_fix_draw_bound_ccfx_to2110_combined", 5),
+    "20190806_141418_fix_draw_bound_ccfx_to2110_5_scen_combined", 5),
   gdp=VersionGBDRoundID("20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all_ordered_gdp", 5)
 )
 
@@ -58,13 +58,13 @@ FASTEST_SCENARIO_VERSIONS = dict(
   shocks=VersionGBDRoundID("20191108_shocks_only_decay_weight_15", 5),
   death=VersionGBDRoundID(
     "20191106_sdg_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all", 5),
-  population=VersionGBDRoundID("20191106_15_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all", 5),
-  population_mean_ui=VersionGBDRoundID("20191106_15_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all_combined", 5),
-  lex=VersionGBDRoundID("20191106_sdg_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all_gbd4_extrap", 5),
+  population=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all", 5),
+  population_mean_ui=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_combined", 5),
+  lex=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_gbd4_extrap", 5),
   migration=VersionGBDRoundID("20190801_20190607_arima_cap", 5),
-  tfr=VersionGBDRoundID("20190807_163915_fix_draw_bound_ccfx_99th_to2110", 5),
+  tfr=VersionGBDRoundID("20190806_141418_fix_draw_bound_ccfx_to2110_5_scen", 5),
   tfr_mean_ui=VersionGBDRoundID(
-    "20190807_163915_fix_draw_bound_ccfx_99th_to2110_combined", 5),
+    "20190806_141418_fix_draw_bound_ccfx_to2110_5_scen_combined", 5),
   gdp=VersionGBDRoundID("20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all_ordered_gdp", 5)
 )
 
@@ -83,21 +83,21 @@ SDG_SCENARIO_VERSIONS = dict(
   shocks=VersionGBDRoundID("20190606_ldi_fix", 5),
   death=VersionGBDRoundID(
     "20191106_sdg_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all", 5),
-  population=VersionGBDRoundID("20191106_sdg_ref_15_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all", 5),
-  population_mean_ui=VersionGBDRoundID("20191106_sdg_ref_15_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all_combined", 5),
-  lex=VersionGBDRoundID("20191106_sdg_ref_99_resub_fix_sdi_agg_arima_squeeze_shocks_hiv_all_gbd4_extrap", 5),
+  population=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all", 5),
+  population_mean_ui=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_combined", 5),
+  lex=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_gbd4_extrap", 5),
   migration=VersionGBDRoundID("20190801_20190607_arima_cap", 5),
   tfr=VersionGBDRoundID(
-    "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped", 5),
+    "20190806_141418_fix_draw_bound_ccfx_to2110_5_scen", 5),
   tfr_mean_ui=VersionGBDRoundID(
-    "20190807_164000_fix_draw_bound_ccfx_sdg_to2110_scen_swapped_combined", 5),
+    "20190806_141418_fix_draw_bound_ccfx_to2110_5_scen_combined", 5),
   gdp=VersionGBDRoundID("20190808_15_ref_85_agg_gdp", 5)
 )
 
 PAST_VERSIONS = dict(
   population=VersionGBDRoundID("20181206_pop_1950_2017", 5),
   lex=VersionGBDRoundID("20191029_fhs_computed_from_20190109_version90_etl_gbd4_all_youth", 5),
-  tfr=VersionGBDRoundID("20190109_va84", 5)
+  tfr=VersionGBDRoundID("20191114_va84", 5)
 )
 
 WPP_VERSIONS = dict(
