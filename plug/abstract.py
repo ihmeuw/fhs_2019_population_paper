@@ -1,5 +1,5 @@
 """
-The global total fertility rate (TFR) in 2100 is forecasted to be 1.66 
+The global total fertility rate (TFR) in 2100 is forecasted to be 1.66
 (95% UI xx–xx).  In the reference forecast, the global population is projected
 to peak in 2063 at 9.7 (UI)  billion people, and decline to 8.7 (UI) in 2100.
 The reference projections fore the 5 five largest countries in 2100 are India
@@ -18,9 +18,9 @@ from the UNPD and the Wittgenstein Centre, which project 10.9 billion and 9.3
 billion people globally in 2100, respectively. The difference with UNPD in 2100
 is due to XX million fewer people in the reference scenario in sub-Saharan
 Africa and XX million in other regions, primarily due to the level of fertility
-achieved in below replacement populations. China is expected to become the
-largest economy by XX but in the reference scenario the USA would once again
-become in the largest economy in XX.
+achieved in below replacement populations; Chine will decline by XX. China is
+expected to become the largest economy by XX but in the reference scenario the
+USA would once again become in the largest economy in XX.
 """
 import pandas as pd
 import xarray as xr
@@ -31,6 +31,9 @@ from fbd_core.etl import resample
 from fbd_core.etl.aggregator import Aggregator
 from fbd_core.etl.transformation import expand_dimensions
 from fbd_core.file_interface import FBDPath, open_xr, save_xr
+
+import sys
+sys.path.append(".")
 
 import settings
 
@@ -53,7 +56,7 @@ def _location_id_to_name(location_ids):
     return location_names
 
 
-# The global total fertility rate (TFR) in 2100 is forecasted to be 1.66 
+# The global total fertility rate (TFR) in 2100 is forecasted to be 1.66
 # (95% UI xx–xx).
 def tfr_2100():
     tfr_dir = FBDPath(
@@ -173,7 +176,7 @@ def most_populated_2100():
         f"USA ({usa_val} million [{usa_lower}-{usa_upper}]), and "
         f"DR Congo ({drcongo_val} million [{drcongo_lower}-{drcongo_upper}])."
         f"\n")
-    
+
 
 # Findings also suggest a shifting age structure in many parts of the world,
 # with XX individuals above the age of 65,  and XX individuals below the age of
@@ -187,7 +190,7 @@ def age_pops():
     pop_da = open_xr(pop_path).data.sel(
         sex_id=BOTH_SEX_ID, scenario=0, year_id=2100, quantile="mean",
         location_id=1)
-    
+
     # 65 to 69, 70 to 74, 75 to 79, 80 plus
     above_65_ages = [18, 19, 20, 21]
     above_65_da = pop_da.sel(age_group_id=above_65_ages)
@@ -215,7 +218,7 @@ def tfr_below_replacement():
     tfr_path = tfr_dir / "tfr_combined.nc"
     tfr_da = open_xr(tfr_path).data.sel(scenario=0, location_id=COUNTRIES,
         quantile="mean")
-    
+
     # Replacement TFR is 2.1
     below_2050 = (tfr_da.sel(year_id=2050) < 2.1).sum().values.item(0)
     below_2100 = (tfr_da.sel(year_id=2100) < 2.1).sum().values.item(0)
@@ -250,10 +253,13 @@ def pop_declines():
     decline_over_50_locs = list(pct_decline_da.where(
         pct_decline_da > .5, drop=True).location_id.values)
     decline_over_50_locs = _location_id_to_name(decline_over_50_locs)
-    
+
+    decline_china = _helper_round(
+        pct_decline_da.sel(location_id=6).values.item(0)*100, 1)
+
     print(f"{decline_over_50_val} countries including {decline_over_50_locs} "
           f"in the reference scenario will have declines of greater than "
-          f"50% from 2017 by 2100.\n")
+          f"50% from 2017 by 2100; China will decline by {decline_china}%\n")
 
 
 # Alternative scenarios suggest meeting the SDG targets for education and
@@ -283,7 +289,7 @@ def alt_scenario_pops():
 
     sdg_2100_pop = _helper_round(sdg_2100_pop, 1e9)
     fastest_2100_pop = _helper_round(fastest_2100_pop, 1e9)
-    
+
     print(f"Alternative scenarios suggest meeting the SDG targets for "
           f"education and contraceptive met need will result in a global "
           f"population of {sdg_2100_pop} billion in 2100, and "
@@ -301,7 +307,7 @@ def wpp_witt_pops():
         f"{settings.WPP_VERSIONS['population_aggs'].version}")
     wpp_pop_path = wpp_pop_dir / "2019_fhs_agg_allage_bothsex_only.nc"
     wpp_pop_da = open_xr(wpp_pop_path).data.sel(location_id=1, year_id=2100)
-    
+
     witt_pop_dir = FBDPath(
         f"/{settings.WITT_VERSIONS['population'].gbd_round_id}/"
         f"future/population/"
@@ -312,18 +318,18 @@ def wpp_witt_pops():
 
     wpp_pop_val = _helper_round(wpp_pop_da.values.item(0), 1e9)
     witt_pop_val = _helper_round(witt_pop_da.values.item(0), 1e9)
-    
+
     print(f"Forecasts from this study differ from the UNPD and the "
           f"Wittgenstein Centre, which project {wpp_pop_val} billion and "
           f"{witt_pop_val} billion people globally in 2100, respectively.\n")
 
 
-# The difference with UNPD in 2100 is due to XX million fewer people in the 
-# reference scenario in sub-Saharan Africa, XX million fewer in South Asia, 
-# and XX million fewer in Southeast Asia, East Asia, and Oceania, primarily due 
+# The difference with UNPD in 2100 is due to XX million fewer people in the
+# reference scenario in sub-Saharan Africa, XX million fewer in South Asia,
+# and XX million fewer in Southeast Asia, East Asia, and Oceania, primarily due
 # to the level of fertility achieved in below replacement populations.
 def _helper_wpp_fhs_diff(wpp_pop_da, fhs_pop_da, loc_id):
-    diff = (wpp_pop_da.sel(location_id=loc_id).values.item(0) - 
+    diff = (wpp_pop_da.sel(location_id=loc_id).values.item(0) -
             fhs_pop_da.sel(location_id=loc_id).values.item(0))
     return diff
 def wpp_fhs_diff():
@@ -342,7 +348,7 @@ def wpp_fhs_diff():
     fhs_pop_da = open_xr(fhs_pop_path).data.sel(
         sex_id=BOTH_SEX_ID, age_group_id=ALL_AGE_ID, scenario=0,
         quantile="mean", year_id=2100)
-    
+
     # Sub-Saharan 166
     sub_saharan_diff = _helper_wpp_fhs_diff(wpp_pop_da, fhs_pop_da, 166)
     # South Asia 158
@@ -372,7 +378,7 @@ def largest_gdp():
         f"{settings.BASELINE_VERSIONS['gdp'].version}")
     gdp_path = gdp_dir / "gdp.nc"
     gdp_da = open_xr(gdp_path).data.sel(scenario=0)
-    
+
     max_da = gdp_da.where(gdp_da==gdp_da.max('location_id'), drop=True)
     # Find 1st year where China is not nan (ie it is the max gdp for that year)
     china_year = max_da.sel(
@@ -398,8 +404,8 @@ if __name__ == "__main__":
     tfr_below_replacement()
     pop_declines()
     alt_scenario_pops()
-    wpp_witt_pops()
-    wpp_fhs_diff()
+    #wpp_witt_pops()
+    #wpp_fhs_diff()
     largest_gdp()
 
 
