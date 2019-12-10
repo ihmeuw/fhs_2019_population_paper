@@ -86,11 +86,11 @@ def dep_ratio(pop, total_emp, working_ages, old_ages):
 
     wp = pop.sel(year_id=[2017, 2100],
                  age_group_id=list(working_ages)) * \
-         total_emp.sel(year_id=2018)
+         total_emp.sel(year_id=2017)
     wp_sum = wp.sum("age_group_id")
 
     non_wp = pop.sel(age_group_id=list(old_ages)).sum("age_group_id") + \
-             (pop * (1 - total_emp.sel(year_id=2018))).sum("age_group_id")
+             (pop * (1 - total_emp.sel(year_id=2017))).sum("age_group_id")
 
     ratio = non_wp.sum(["sex_id", "location_id"]) / wp_sum.sum(
         ["sex_id", "location_id"])
@@ -102,11 +102,11 @@ def dep_ratio(pop, total_emp, working_ages, old_ages):
 def dep_ratio_above_one(pop, total_emp, working_ages, old_ages):
     wp = pop.sel(year_id=[2017, 2100],
                  age_group_id=list(working_ages)) * \
-         total_emp.sel(year_id=2018)
+         total_emp.sel(year_id=2017)
     wp_sum = wp.sum("age_group_id")
 
     non_wp = pop.sel(age_group_id=list(old_ages)).sum("age_group_id") + \
-             (pop * (1 - total_emp.sel(year_id=2018))).sum("age_group_id")
+             (pop * (1 - total_emp.sel(year_id=2017))).sum("age_group_id")
 
     ratio = non_wp.sum(["sex_id"]) / wp_sum.sum(
         ["sex_id"])
@@ -128,8 +128,8 @@ def china_decline(pop):
     china = pop.sel(location_id=6, age_group_id=9, sex_id=3, scenario=0)
 
     decline = np.round(
-        (china.sel(year_id=2100) - china.sel(year_id=2018)) / china.sel(
-            year_id=2018), 2)
+        (china.sel(year_id=2100) - china.sel(year_id=2017)) / china.sel(
+            year_id=2017), 2)
 
     lower = decline.sel(quantile="lower").item()
     mean = decline.sel(quantile="mean").item()
