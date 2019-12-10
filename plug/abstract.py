@@ -22,6 +22,7 @@ achieved in below replacement populations; Chine will decline by XX. China is
 expected to become the largest economy by XX but in the reference scenario the
 USA would once again become in the largest economy in XX.
 """
+import numpy as np
 import pandas as pd
 import xarray as xr
 
@@ -127,54 +128,77 @@ def most_populated_2100():
     pop_da = open_xr(pop_path).data.sel(
         age_group_id=ALL_AGE_ID, sex_id=BOTH_SEX_ID, scenario=0, year_id=2100)
 
-    # Loc IDs: India 163, Nigeria 214, China 6, USA 102, DR Congo 171
-    india_val = pop_da.sel(location_id=163, quantile="mean").values.item(0)
-    india_upper = pop_da.sel(location_id=163, quantile="upper").values.item(0)
-    india_lower = pop_da.sel(location_id=163, quantile="lower").values.item(0)
+    top_5_locs = pop_da.sel(quantile="mean",location_id=COUNTRIES).\
+        to_dataframe().reset_index().sort_values("population", ascending=False).\
+        head(5)["location_id"].to_list()
 
-    nigeria_val = pop_da.sel(location_id=214, quantile="mean").values.item(0)
-    nigeria_upper = pop_da.sel(location_id=214, quantile="upper").values.item(0)
-    nigeria_lower = pop_da.sel(location_id=214, quantile="lower").values.item(0)
+    first_loc = _location_id_to_name([top_5_locs[0]])
+    first_val = pop_da.sel(
+        location_id=top_5_locs[0], quantile="mean").values.item(0)
+    first_upper = pop_da.sel(
+        location_id=top_5_locs[0], quantile="upper").values.item(0)
+    first_lower = pop_da.sel(
+        location_id=top_5_locs[0], quantile="lower").values.item(0)
 
-    china_val = pop_da.sel(location_id=6, quantile="mean").values.item(0)
-    china_upper = pop_da.sel(location_id=6, quantile="upper").values.item(0)
-    china_lower = pop_da.sel(location_id=6, quantile="lower").values.item(0)
+    second_loc = _location_id_to_name([top_5_locs[1]])
+    second_val = pop_da.sel(
+        location_id=top_5_locs[1], quantile="mean").values.item(0)
+    second_upper = pop_da.sel(
+        location_id=top_5_locs[1], quantile="upper").values.item(0)
+    second_lower = pop_da.sel(
+        location_id=top_5_locs[1], quantile="lower").values.item(0)
 
-    usa_val = pop_da.sel(location_id=102, quantile="mean").values.item(0)
-    usa_upper = pop_da.sel(location_id=102, quantile="upper").values.item(0)
-    usa_lower = pop_da.sel(location_id=102, quantile="lower").values.item(0)
+    third_loc = _location_id_to_name([top_5_locs[2]])
+    third_val = pop_da.sel(
+        location_id=top_5_locs[2], quantile="mean").values.item(0)
+    third_upper = pop_da.sel(
+        location_id=top_5_locs[2], quantile="upper").values.item(0)
+    third_lower = pop_da.sel(
+        location_id=top_5_locs[2], quantile="lower").values.item(0)
 
-    drcongo_val = pop_da.sel(location_id=171, quantile="mean").values.item(0)
-    drcongo_upper = pop_da.sel(location_id=171, quantile="upper").values.item(0)
-    drcongo_lower = pop_da.sel(location_id=171, quantile="lower").values.item(0)
+    fourth_loc = _location_id_to_name([top_5_locs[3]])
+    fourth_val = pop_da.sel(
+        location_id=top_5_locs[3], quantile="mean").values.item(0)
+    fourth_upper = pop_da.sel(
+        location_id=top_5_locs[3], quantile="upper").values.item(0)
+    fourth_lower = pop_da.sel(
+        location_id=top_5_locs[3], quantile="lower").values.item(0)
+
+    fifth_loc = _location_id_to_name([top_5_locs[4]])
+    fifth_val = pop_da.sel(
+        location_id=top_5_locs[4], quantile="mean").values.item(0)
+    fifth_upper = pop_da.sel(
+        location_id=top_5_locs[4], quantile="upper").values.item(0)
+    fifth_lower = pop_da.sel(
+        location_id=top_5_locs[4], quantile="lower").values.item(0)
 
     # round
-    india_val = _helper_round(india_val, 1e6)
-    india_upper = _helper_round(india_upper, 1e6)
-    india_lower = _helper_round(india_lower, 1e6)
+    first_val = _helper_round(first_val, 1e6)
+    first_upper = _helper_round(first_upper, 1e6)
+    first_lower = _helper_round(first_lower, 1e6)
 
-    nigeria_val = _helper_round(nigeria_val, 1e6)
-    nigeria_upper = _helper_round(nigeria_upper, 1e6)
-    nigeria_lower = _helper_round(nigeria_lower, 1e6)
+    second_val = _helper_round(second_val, 1e6)
+    second_upper = _helper_round(second_upper, 1e6)
+    second_lower = _helper_round(second_lower, 1e6)
 
-    china_val = _helper_round(china_val, 1e6)
-    china_upper = _helper_round(china_upper, 1e6)
-    china_lower = _helper_round(china_lower, 1e6)
+    third_val = _helper_round(third_val, 1e6)
+    third_upper = _helper_round(third_upper, 1e6)
+    third_lower = _helper_round(third_lower, 1e6)
 
-    usa_val = _helper_round(usa_val, 1e6)
-    usa_upper = _helper_round(usa_upper, 1e6)
-    usa_lower = _helper_round(usa_lower, 1e6)
+    fourth_val = _helper_round(fourth_val, 1e6)
+    fourth_upper = _helper_round(fourth_upper, 1e6)
+    fourth_lower = _helper_round(fourth_lower, 1e6)
 
-    drcongo_val = _helper_round(drcongo_val, 1e6)
-    drcongo_upper = _helper_round(drcongo_upper, 1e6)
-    drcongo_lower = _helper_round(drcongo_lower, 1e6)
+    fifth_val = _helper_round(fifth_val, 1e6)
+    fifth_upper = _helper_round(fifth_upper, 1e6)
+    fifth_lower = _helper_round(fifth_lower, 1e6)
 
     print(f"The reference projections for the 5 five largest countries in 2100 "
-        f"are India ({india_val} million [{india_lower}-{india_upper}]), "
-        f"Nigeria ({nigeria_val} million [{nigeria_lower}-{nigeria_upper}]), "
-        f"China ({china_val} million [{china_lower}-{china_upper}]), "
-        f"USA ({usa_val} million [{usa_lower}-{usa_upper}]), and "
-        f"DR Congo ({drcongo_val} million [{drcongo_lower}-{drcongo_upper}])."
+        f"are {first_loc} ({first_val} million [{first_lower}-{first_upper}]), "
+        f"{second_loc} ({second_val} million [{second_lower}-{second_upper}]), "
+        f"{third_loc} ({third_val} million [{third_lower}-{third_upper}]), "
+        f"{fourth_loc} ({fourth_val} million [{fourth_lower}-{fourth_upper}]), and "
+        f"{fifth_loc} ({fifth_val} million [{fifth_lower}-{fifth_upper}])."
         f"\n")
 
 
@@ -267,24 +291,19 @@ def pop_declines():
 # 2100, and 6.8 billion assuming 99th percentile rates of change in educational
 # attainment and met need for contraception.
 def alt_scenario_pops():
-    sdg_pop_dir = FBDPath(
-        f"/{settings.SDG_SCENARIO_VERSIONS['population_mean_ui'].gbd_round_id}/"
+    pop_dir = FBDPath(
+        f"/{settings.BASELINE_VERSIONS['population_mean_ui'].gbd_round_id}/"
         f"future/population/"
-        f"{settings.SDG_SCENARIO_VERSIONS['population_mean_ui'].version}")
-    sdg_pop_path = sdg_pop_dir / "population_combined.nc"
-    # Scenario -1 is SDG
-    sdg_pop_da = open_xr(sdg_pop_path).data.sel(
-        location_id=1, age_group_id=22, sex_id=3, scenario=-1, quantile="mean")
+        f"{settings.BASELINE_VERSIONS['population_mean_ui'].version}")
+    pop_path = pop_dir / "population_combined.nc"
+    # Scenario 3 is SDG
+    sdg_pop_da = open_xr(pop_path).data.sel(
+        location_id=1, age_group_id=22, sex_id=3, scenario=3, quantile="mean")
     sdg_2100_pop = sdg_pop_da.sel(year_id=2100).values.item(0)
 
-    fastest_pop_dir = FBDPath(
-        f"/{settings.FASTEST_SCENARIO_VERSIONS['population_mean_ui'].gbd_round_id}/"
-        f"future/population/"
-        f"{settings.FASTEST_SCENARIO_VERSIONS['population_mean_ui'].version}")
-    fastest_pop_path = fastest_pop_dir / "population_combined.nc"
-    # Scenario 1 is the 99
-    fastest_pop_da = open_xr(fastest_pop_path).data.sel(
-        location_id=1, age_group_id=22, sex_id=3, scenario=1, quantile="mean")
+    # Scenario 2 is the 99
+    fastest_pop_da = open_xr(pop_path).data.sel(
+        location_id=1, age_group_id=22, sex_id=3, scenario=2, quantile="mean")
     fastest_2100_pop = fastest_pop_da.sel(year_id=2100).values.item(0)
 
     sdg_2100_pop = _helper_round(sdg_2100_pop, 1e9)
@@ -380,14 +399,22 @@ def largest_gdp():
     gdp_da = open_xr(gdp_path).data.sel(scenario=0)
 
     max_da = gdp_da.where(gdp_da==gdp_da.max('location_id'), drop=True)
-    # Find 1st year where China is not nan (ie it is the max gdp for that year)
-    china_year = max_da.sel(
-        location_id=6).dropna(dim='year_id').year_id.values.item(0)
-    # Subset to post-china_year years for when USA retakes the lead
-    ok_usa_years = range(china_year, max_da.year_id.max().values.item(0) + 1)
-    past_china_usa_da = max_da.sel(location_id=102, year_id=ok_usa_years)
-    # Find 1st year where USA retakes lead
-    usa_year = past_china_usa_da.dropna(dim='year_id').year_id.values.item(0)
+    # Find years where china is top
+    china_years = max_da.sel(
+        location_id=6).dropna(dim='year_id').year_id.values
+    # Find years where USA is top
+    usa_years = max_da.sel(
+        location_id=102).dropna(dim='year_id').year_id.values
+    # check no other location is ever top
+    missing_years = np.setdiff1d(
+        gdp_da.coords["year_id"].values,
+        np.concatenate([china_years, usa_years]))
+    assert missing_years.size == 0
+
+    # find first year in future where china takes lead
+    china_year = china_years.min()
+    # find first year when US regains lead
+    usa_year = usa_years[usa_years > china_year].min()
 
     print(f"China is expected to become the largest economy by {china_year} "
           f"but in the reference scenario the USA would once again become in "

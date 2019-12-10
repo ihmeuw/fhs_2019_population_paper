@@ -61,8 +61,6 @@ N_DECIMALS = 2
 COUNTRIES = db.get_locations_by_level(3).location_id.values.tolist()
 
 TFR_VERSION = sett.BASELINE_VERSIONS["tfr_mean_ui"].version
-FASTEST_VERSION = sett.FASTEST_SCENARIO_VERSIONS["tfr_mean_ui"].version
-SDG_VERSION = sett.SDG_SCENARIO_VERSIONS["tfr_mean_ui"].version
 
 PAST_POP_VERSION = sett.PAST_VERSIONS["population"].version
 FUTURE_POP_VERSION = sett.BASELINE_VERSIONS["population_mean_ui"].version
@@ -255,11 +253,9 @@ def tfr_subsaharan_africa(tfr_da):
         sa_100, N_DECIMALS)
 
     # countries above replacement in 2100
-    above_rep_100 = subsah_100.round(
-        N_DECIMALS).to_dataframe().unstack().droplevel(
-        level=0, axis=1).reset_index().query("mean>2.1").merge(
-        locs).sort_values(by="mean", axis=0, ascending=False).reset_index(
-        drop=True)
+    above_rep_100 = subsah_100.round(N_DECIMALS).to_dataframe().unstack().\
+        transpose().reset_index().query("mean>2.1").merge(locs).\
+        sort_values(by="mean", axis=0, ascending=False).reset_index(drop=True)
 
     abvrep_rows = [] # subset each rows
     for row in range(0, len(above_rep_100)):
@@ -280,9 +276,8 @@ def tfr_subsaharan_africa(tfr_da):
     abvrep_string = ", ".join(abvrep_strings) # join list to make final string
 
     # lowest 5 tfr countries
-    lowest_5_100 = subsah_100.to_dataframe().unstack().droplevel(
-        level=0, axis=1).nsmallest(5, "mean").reset_index().merge(locs).round(
-        N_DECIMALS)
+    lowest_5_100 = subsah_100.to_dataframe().unstack().transpose().reset_index().\
+        nsmallest(5, "mean").reset_index().merge(locs).round(N_DECIMALS)
     # names ascending order
     lowest_ascending = ", ".join(lowest_5_100.location_name)
     # get range
