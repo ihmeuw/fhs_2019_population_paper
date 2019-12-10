@@ -44,7 +44,17 @@ YEARS_PAST = [1990, 2017]
 YEARS_FUT = [2050, 2100]
 
 
-def compile_data(tfr_fut_version, tfr_past_version):
+def compile_data(tfr_fut_version, tfr_past_version, reviewer_cols):
+    """Creates dataframe of total fertility rate data to be converted into
+        an excel xlsx files
+    Args:
+        tfr_fut_version (str):
+            the version name of total fertility forecast data to use
+        tfr_past_version (str):
+            the version name of total fertility past data to use
+    Returns:
+        final dataframe to save as an excel file
+    """
     future_tfr_fbdpath = FBDPath(f"/5/future/tfr/{tfr_fut_version}/"
                                  "tfr_combined.nc")
     past_tfr_fbdpath = FBDPath(f"5/past/tfr/{tfr_past_version}/tfr.nc")
@@ -87,26 +97,40 @@ def compile_data(tfr_fut_version, tfr_past_version):
                                                    "scenario"],
                                             columns="quantile").reset_index()
     past_tfr_lims = past_fertility_df.merge(past_lims_df, how="left")
+    if reviewer_cols:
+        tfr_cols = ["location_id", "scenario",
+                    "mean", "lower", "upper",
+                    "year_id"]
+        val_cols = ["mean", "lower", "upper"]
+        past_df_val = add_ui(past_tfr_lims)[tfr_cols]
+        fut_df_val = add_ui(fut_lims_df)[tfr_cols]
+        combined_tfr = past_df_val.merge(fut_df_val, how="outer",
+                                         on=["year_id", "location_id",
+                                             "scenario", "mean",
+                                             "lower", "upper"])
+        combined_tfr_pivot = pivot_scenarios(combined_tfr, val_cols)
+        combined_tfr_pivot.columns = [f"{j}_{i}" if j != ""
+                                      else f"{i}" for i, j in
+                                      combined_tfr_pivot.columns]
+    else:
+        get_lims(past_tfr_lims)
+        get_lims(fut_lims_df)
+        tfr_cols = ["location_id", "scenario", "value", "year_id"]
+        past_df_val = add_ui(past_tfr_lims)[tfr_cols]
+        fut_df_val = add_ui(fut_lims_df)[tfr_cols]
 
-    get_lims(past_tfr_lims)
-    get_lims(fut_lims_df)
+        combined_tfr = past_df_val.merge(fut_df_val, how="outer",
+                                         on=["year_id", "location_id",
+                                             "scenario", "value"])
 
-    tfr_cols = ["location_id", "scenario", "value", "year_id"]
-    past_df_val = add_ui(past_tfr_lims)[tfr_cols]
-    fut_df_val = add_ui(fut_lims_df)[tfr_cols]
+        combined_tfr_pivot = pivot_scenarios(combined_tfr, "value")
 
-    combined_tfr = past_df_val.merge(fut_df_val, how="outer",
-                                     on=["year_id", "location_id",
-                                         "scenario", "value"])
-
-    combined_tfr_pivot = pivot_scenarios(combined_tfr)
-
-    combined_tfr_pivot_sort = combined_tfr_pivot[
-        ["location_id", "1990_ref", "2017_ref", "2050_ref", "2100_ref",
-         "1990_better", "2017_better", "2050_better", "2100_better"]]
+        combined_tfr_pivot = combined_tfr_pivot[
+            ["location_id", "1990_ref", "2017_ref", "2050_ref", "2100_ref",
+             "1990_better", "2017_better", "2050_better", "2100_better"]]
 
     final_df = gbd_loc_df.merge(
-        combined_tfr_pivot_sort).sort_values("sort_order")
+       combined_tfr_pivot).sort_values("sort_order")
     return (final_df)
 
 
@@ -146,7 +170,7 @@ def add_ui(df, df_type="mean"):
     return df
 
 
-def pivot_scenarios(df, df_type="tfr"):
+def pivot_scenarios(df, value):
     """
     Function used to pivot the table from having scenario per row to cols
     (ref and better) concats scenario to col name
@@ -156,11 +180,12 @@ def pivot_scenarios(df, df_type="tfr"):
         2017: "2017", 2050: "2050", 2100: "2100"
     }
 
-    df["scenario"] = (df["year_id"].map(ref_map) + "_"
-                      + df["scenario"].map(ref_map))
-    df = df.pivot_table(values="value",
+    df["year_scenario"] = (df["year_id"].map(ref_map) + "_"
+                           + df["scenario"].map(ref_map))
+    df = df.pivot_table(values=value,
                         index=["location_id"],
-                        columns=["scenario"], aggfunc="first").reset_index()
+                        columns=["year_scenario"],
+                        aggfunc="first").reset_index()
     return df
 
 
@@ -380,37 +405,97 @@ def write_table(final_df, outfile, stages, years, col_name_map):
     workbook.close()
 
 
-def main(tfr_fut_version, tfr_past_version):
-    # Generate an excel worksheet with the title outfile ("test" followed by
-    # date and current time to the second)
-    # current issue(s): will not write "Location" boxes in final sheet leaving
-    # blank cells where a salmon colored, bold, text
-    # Location should be
+def main(tfr_fut_version, tfr_past_version, reviewer_cols):
+    """ Generate an excel worksheet with the title outfile ("test" followed by
+    date and current time to the second)
+    Args:
+        tfr_fut_version (str):
+            The version of total fertility rate forecast to use
+        tfr_past_version (str):
+            The version of total fertility rate past data to use
+    Output: None.
+    Current issue(s): will not write "Location" boxes in final sheet leaving
+    blank cells where a salmon colored, bold, text 'Location' should be
+    """
 
-    outfile = ("TFR_combined_table_%s.xlsx" %
-               (datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")))
     stages = ["ref", "better"]
     year_ids = YearRange(1990, 2018, 2100)
 
-    # Dictionary used to create worksheet column names from df names
-    col_name_map = {
-     "lancet_label": "Location",
-     "1990_ref": "1990",
-     "2017_ref": "2017",
-     "2050_ref": "2050",
-     "2100_ref": "2100",
-     "1990_better": "1990",
-     "2017_better": "2017",
-     "2050_better": "2050",
-     "2100_better": "2100"
-    }
+    if reviewer_cols:
+        outfile = ("TFR_reviewer_table_%s.csv" %
+                   (datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")))
+        col_name_map = {
+         "lancet_label": "Location",
+         "1990_ref_mean": "1990 reference mean",
+         "1990_ref_lower": "1990 reference lower",
+         "1990_ref_upper": "1990 reference upper",
+         "2017_ref_mean": "2017 reference mean",
+         "2017_ref_lower": "2017 reference lower",
+         "2017_ref_upper": "2017 reference upper",
+         "2050_ref_mean": "2050 reference mean",
+         "2050_ref_lower": "2050 reference lower",
+         "2050_ref_upper": "2050 reference upper",
+         "2100_ref_mean": "2100 reference mean",
+         "2100_ref_lower": "2100 reference lower",
+         "2100_ref_upper": "2100 reference upper",
+         "1990_better_mean": "1990 faster met need mean",
+         "1990_better_lower": "1990 faster met need lower",
+         "1990_better_upper": "1990 faster met need upper",
+         "2017_better_mean": "2017 faster met need mean",
+         "2017_better_lower": "2017 faster met need lower",
+         "2017_better_upper": "2017 faster met need upper",
+         "2050_better_mean": "2050 faster met need mean",
+         "2050_better_lower": "2050 faster met need lower",
+         "2050_better_upper": "2050 faster met need upper",
+         "2100_better_mean": "2100 faster met need mean",
+         "2100_better_lower": "2100 faster met need lower",
+         "2100_better_upper": "2100 faster met need upper"
+        }
 
-    cols_to_write = ["level", "lancet_label", "1990_ref", "2017_ref",
-                     "2050_ref", "2100_ref", "1990_better", "2017_better",
-                     "2050_better", "2100_better"]
+        cols_to_write = ["lancet_label", "1990_ref_mean",
+                         "1990_ref_lower", "1990_ref_upper",
+                         "2017_ref_mean", "2017_ref_lower",
+                         "2017_ref_upper", "2050_ref_mean",
+                         "2050_ref_lower", "2050_ref_upper",
+                         "2100_ref_mean", "2100_ref_lower",
+                         "2100_ref_upper", "1990_better_mean",
+                         "1990_better_lower", "1990_better_upper",
+                         "2017_better_mean", "2017_better_lower",
+                         "2017_better_upper", "2050_better_mean",
+                         "2050_better_lower", "2050_better_upper",
+                         "2100_better_mean", "2100_better_lower",
+                         "2100_better_upper"]
+        df = compile_data(
+                tfr_fut_version,
+                tfr_past_version,
+                reviewer_cols)[cols_to_write].round(2)
+        df.rename(columns=col_name_map, inplace=True)
+        df = df.set_index("Location")
+        df.to_csv(outfile)
+    else:
+        outfile = ("TFR_combined_table_%s.xlsx" %
+                   (datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")))
+        # Dictionary used to create worksheet column names from df names
+        col_name_map = {
+         "lancet_label": "Location",
+         "1990_ref": "1990",
+         "2017_ref": "2017",
+         "2050_ref": "2050",
+         "2100_ref": "2100",
+         "1990_better": "1990",
+         "2017_better": "2017",
+         "2050_better": "2050",
+         "2100_better": "2100"
+        }
 
-    df = compile_data(tfr_fut_version, tfr_past_version)[cols_to_write]
-    write_table(df, outfile, stages, year_ids, col_name_map)
+        cols_to_write = ["level", "lancet_label", "1990_ref", "2017_ref",
+                         "2050_ref", "2100_ref", "1990_better", "2017_better",
+                         "2050_better", "2100_better"]
+
+        df = compile_data(tfr_fut_version,
+                          tfr_past_version,
+                          reviewer_cols)[cols_to_write]
+        write_table(df, outfile, stages, year_ids, col_name_map)
 
 
 if __name__ == "__main__":
@@ -431,6 +516,13 @@ if __name__ == "__main__":
         help="Name of FBD past tfr data file. Taken as name of "
              "directory data file is found in \'.nc\' is not required"
     )
+    parser.add_argument(
+        "--reviewer_cols",
+        action="store_true",
+        help="Pass if desired output is a csv containin mean, lower, upper as"
+             " seperate columns"
+    )
     args = parser.parse_args()
 
-    main(tfr_fut_version=args.tfr_fut, tfr_past_version=args.tfr_past)
+    main(tfr_fut_version=args.tfr_fut, tfr_past_version=args.tfr_past,
+         reviewer_cols=args.reviewer_cols)
