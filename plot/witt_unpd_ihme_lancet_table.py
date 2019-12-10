@@ -189,25 +189,14 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
     wpp_tfr_100["unpd_tfr_round"] = floating_style(wpp_tfr_100.unpd_tfr)
     ihme_tfr_100["ihme_tfr_round"] = floating_style(ihme_tfr_100.ihme_tfr)
 
-    # create new column of strings that are the pop data for each dataset put
-    # into comma format eg 100,000
     witt_pop_100["witt_pop_comma"] = large_number_float(
         witt_pop_100["witt_pop_int"])
-    # pd.to_numeric(witt_pop_100["witt_pop"].fillna(0), errors="coerce")
-    # witt_pop_100["witt_pop_comma"] = witt_pop_100["witt_pop_comma"].map(
-    #    "{:,.0f}".format)
 
     wpp_pop_100["unpd_pop_comma"] = large_number_float(
         wpp_pop_100["unpd_pop_int"])
-    # pd.to_numeric(wpp_pop_100["unpd_pop"].fillna(0), errors="coerce")
-    # wpp_pop_100["unpd_pop_comma"] = wpp_pop_100["unpd_pop_comma"].map(
-    #    "{:,.0f}".format)
 
     ihme_pop_100["ihme_pop_comma"] = large_number_float(
         ihme_pop_100["ihme_pop_int"])
-    # pd.to_numeric(ihme_pop_100["ihme_pop"], errors="coerce")
-    # ihme_pop_100["ihme_pop_comma"] = ihme_pop_100["ihme_pop_comma"].map(
-    #    "{:,.0f}".format)
 
     final_df = ihme_pop_100.merge(wpp_pop_100, how="left").merge(
         witt_pop_100, how="left").merge(
