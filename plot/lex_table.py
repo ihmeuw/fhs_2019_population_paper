@@ -3,7 +3,9 @@ Life Expectancy Table by country.
 Script to create reference table for Life expectancy for males, females,
 and both genders for locations (Global, superregions, regions, and countries)
 for the years 1990, 2017, 2050, 2100. Calculating and adding the uncertainty
-intervals (ui) to the final table figures
+intervals (ui) to the final table figures. Accepts optional reviewer_cols flag
+which outputs a basic csv containing mean, lower, and upper data as separate
+columns
 
 example call:
 python lex_table.py

@@ -1,7 +1,9 @@
 """
 This program will create a lancet style table for total fertility rates
 per country for the years 1990, 2017, 2050, and 2100 for two scenarios
-reference and faster(85)
+reference and faster(85). Accepts optional reviewer_cols flag
+which outputs a basic csv containing mean, lower, and upper data as separate
+columns
 """
 import datetime
 
