@@ -6,7 +6,7 @@ reference and faster(85)
 example call:
     python total_fertility_table.py
     --tfr_fut 20190806_141418_fix_draw_bound_ccfx_to2110_combined
-    -tfr_past  20191114_va84
+    --tfr_past  20191114_va84
 """
 import datetime
 

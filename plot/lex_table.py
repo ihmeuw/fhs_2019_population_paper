@@ -43,7 +43,7 @@ INDENT_MAP = {
 """
 
 
-def pivot_on_col(df):
+def pivot_on_col(df, value="value"):
     """
     Args:
         df (pandas dataframe):
@@ -53,10 +53,10 @@ def pivot_on_col(df):
     """
     ref_map = {1990: "1990", 2017: "2017", 2050: "2050", 2100: "2100",
                1: "Male", 2: "Female", 3: "Both"}
-    df[value] = df["sex_id"].map(ref_map) + "_" + df["year_id"].map(ref_map)
-    df = df.pivot_table(values="value",
+    df["Sex_id"] = df["sex_id"].map(ref_map) + "_" + df["year_id"].map(ref_map)
+    df = df.pivot_table(values=value,
                         index=["location_id"],
-                        columns=["sex_id"], aggfunc="first").reset_index()
+                        columns=["Sex_id"], aggfunc="first").reset_index()
     return df
 
 
@@ -133,7 +133,7 @@ def get_format_obj(workbook, font_name="Times New Roman", font_size=8,
     return format_obj
 
 
-def compile_data(past_lex, fut_lex):
+def compile_data(past_lex, fut_lex, reviewer_cols):
     """Creates dataframe of life expectancy data to be converted into an excel
     xlsx files
     Args:
@@ -200,28 +200,65 @@ def compile_data(past_lex, fut_lex):
                                                     ).reset_index()
 
     past_comb_lex = past_lex_df.merge(past_lex_lims_df, how="left")
-    get_lims(past_comb_lex)
-    get_lims(fut_comb_lex)
-    lex_cols = ["location_id", "value", "year_id", "sex_id"]
+
+    if reviewer_cols:
+        lex_cols = ["location_id", "mean", "lower", "upper", "year_id",
+                    "sex_id"]
+        val_cols = ["mean", "lower", "upper"]
+    else:
+        lex_cols = ["location_id", "value", "year_id", "sex_id"]
+        val_cols = "value"
+
     past_df_val = add_ui(past_comb_lex)[lex_cols]
     fut_df_val = add_ui(fut_comb_lex)[lex_cols]
-    combined_lex = past_df_val.merge(
-        fut_df_val, how="outer", on=["year_id", "location_id",
-                                     "value", "sex_id"])
-    pivot_lex = pivot_on_col(combined_lex)
-    pivot_lex = pivot_lex[["location_id",
-                           "Male_1990",
-                           "Male_2017",
-                           "Male_2050",
-                           "Male_2100",
-                           "Female_1990",
-                           "Female_2017",
-                           "Female_2050",
-                           "Female_2100",
-                           "Both_1990",
-                           "Both_2017",
-                           "Both_2050",
-                           "Both_2100"]]
+
+    if (reviewer_cols):
+        get_lims(past_comb_lex)
+        get_lims(fut_comb_lex)
+        combined_lex = past_df_val.merge(
+            fut_df_val, how="outer", on=["year_id", "location_id",
+                                         "mean", "lower", "upper", "sex_id"])
+        pivot_lex = pivot_on_col(combined_lex, val_cols)
+        pivot_lex.columns = [f"{i}_{j}" if j != ""
+                             else f"{i}" for i, j in pivot_lex.columns]
+        pivot_lex = pivot_lex[["location_id",
+                               "mean_Male_1990", "mean_Male_2017",
+                               "mean_Male_2050", "mean_Male_2100",
+                               "lower_Male_1990", "lower_Male_2017",
+                               "lower_Male_2050", "lower_Male_2100",
+                               "upper_Male_1990", "upper_Male_2017",
+                               "upper_Male_2050", "upper_Male_2100",
+                               "mean_Female_1990", "mean_Female_2017",
+                               "mean_Female_2050", "mean_Female_2100",
+                               "lower_Female_1990", "lower_Female_2017",
+                               "upper_Female_1990", "upper_Female_2017",
+                               "upper_Female_2050", "upper_Female_2100",
+                               "lower_Female_2050", "lower_Female_2100",
+                               "mean_Both_1990", "mean_Both_2017",
+                               "mean_Both_2050", "mean_Both_2100",
+                               "lower_Both_1990", "lower_Both_2017",
+                               "lower_Both_2050", "lower_Both_2100",
+                               "upper_Both_1990", "upper_Both_2017",
+                               "upper_Both_2050", "upper_Both_2100"]]
+
+    else:
+        combined_lex = past_df_val.merge(
+            fut_df_val, how="outer", on=["year_id", "location_id",
+                                         "value", "sex_id"])
+        pivot_lex = pivot_on_col(combined_lex, val_cols)
+        pivot_lex = pivot_lex[["location_id",
+                               "Male_1990",
+                               "Male_2017",
+                               "Male_2050",
+                               "Male_2100",
+                               "Female_1990",
+                               "Female_2017",
+                               "Female_2050",
+                               "Female_2100",
+                               "Both_1990",
+                               "Both_2017",
+                               "Both_2050",
+                               "Both_2100"]]
     final_df = gbd_loc_df.merge(pivot_lex).sort_values("sort_order")
     return final_df
 
@@ -408,7 +445,7 @@ def write_table(final_df, outfile, stages, years, col_name_map):
     workbook.close()
 
 
-def main(past_lex, fut_lex):
+def main(past_lex, fut_lex, reviewer_cols):
     """
     Args:
         past_lex (str):
@@ -418,33 +455,103 @@ def main(past_lex, fut_lex):
     Returns: None.
     Output: Creates xlsx file in directory script is called from
     """
-    outfile = ("LEX_pb35_%s.xlsx"
+    outfile = ("LEX_pb35_%s"
                % (datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")))
     stages = ["Male", "Female", "Both"]
     year_ids = YearRange(1990, 2018, 2100)
 
     # Dictionary used to map worksheet column names from df names
-    col_name_map = {"lancet_label": "Location",
-                    "Male_1990": "1990",
-                    "Male_2017": "2017",
-                    "Male_2050": "2050",
-                    "Male_2100": "2100",
-                    "Female_1990": "1990",
-                    "Female_2017": "2017",
-                    "Female_2050": "2050",
-                    "Female_2100": "2100",
-                    "Both_1990": "1990",
-                    "Both_2017": "2017",
-                    "Both_2050": "2050",
-                    "Both_2100": "2100"}
+    if reviewer_cols:
+        col_name_map = {"lancet_label": "Location",
+                        "mean_Male_1990": "Male mean 1990",
+                        "lower_Male_1990": "Male lower 1990",
+                        "upper_Male_1990": "Male upper 1990",
+                        "mean_Male_2017": "Male mean 2017",
+                        "lower_Male_2017": "Male lower 2017",
+                        "upper_Male_2017": "male upper 2017",
+                        "mean_Male_2050": "Male mean 2050",
+                        "lower_Male_2050": "Male lower 2050",
+                        "upper_Male_2050": "Male upper 2050",
+                        "mean_Male_2100": "Male mean 2100",
+                        "lower_Male_2100": "Male lower 2100",
+                        "upper_Male_2100": "Male upper 2100",
 
-    cols_to_write = ["level", "lancet_label", "Male_1990", "Male_2017",
-                     "Male_2050", "Male_2100", "Female_1990", "Female_2017",
-                     "Female_2050", "Female_2100", "Both_1990", "Both_2017",
-                     "Both_2050", "Both_2100"]
+                        "mean_Female_1990": "Female mean 1990",
+                        "lower_Female_1990": "Female lower1990",
+                        "upper_Female_1990": "Female upper 1990",
+                        "mean_Female_2017": "Female mean 2017",
+                        "lower_Female_2017": "Female lower 2017",
+                        "upper_Female_2017": "Female upper 2017",
+                        "mean_Female_2050": "Female mean 2050",
+                        "lower_Female_2050": "Female lower 2050",
+                        "upper_Female_2050": "Female upper 2050",
+                        "mean_Female_2100": "Female mean 2100",
+                        "lower_Female_2100": "Female lower 2100",
+                        "upper_Female_2100": "Female upper 2100",
 
-    df = compile_data(past_lex, fut_lex)[cols_to_write]
-    write_table(df, outfile, stages, year_ids, col_name_map)
+                        "mean_Both_1990": "Both sex mean 1990",
+                        "lower_Both_1990": "Both sex lower 1990",
+                        "upper_Both_1990": "Both sex upper 1990",
+                        "mean_Both_2017": "Both sex mean 2017",
+                        "lower_Both_2017": "Both sex lower 2017",
+                        "upper_Both_2017": "Both sex upper 2017",
+                        "mean_Both_2050": "Both sex mean 2050",
+                        "lower_Both_2050": "Both sex lower 2050",
+                        "upper_Both_2050": "Both sex upper 2050",
+                        "mean_Both_2100": "Both sex mean 2100",
+                        "lower_Both_2100": "Both sex lower 2100",
+                        "upper_Both_2100": "Both sex upper 2100"}
+
+        cols_to_write = ["lancet_label",
+                         "mean_Male_1990", "lower_Male_1990",
+                         "upper_Male_1990", "mean_Male_2017",
+                         "lower_Male_2017", "upper_Male_2017",
+                         "mean_Male_2050", "lower_Male_2050",
+                         "upper_Male_2050", "mean_Male_2100",
+                         "lower_Male_2100", "upper_Male_2100",
+
+                         "mean_Female_1990", "lower_Female_1990",
+                         "upper_Female_1990", "mean_Female_2017",
+                         "lower_Female_2017", "upper_Female_2017",
+                         "mean_Female_2050", "lower_Female_2050",
+                         "upper_Female_2050", "mean_Female_2100",
+                         "lower_Female_2100", "upper_Female_2100",
+
+                         "mean_Both_1990", "lower_Both_1990",
+                         "upper_Both_1990", "mean_Both_2017",
+                         "lower_Both_2017", "upper_Both_2017",
+                         "mean_Both_2050", "lower_Both_2050",
+                         "upper_Both_2050", "mean_Both_2100",
+                         "lower_Both_2100", "upper_Both_2100"]
+        df = compile_data(
+            past_lex, fut_lex,
+            reviewer_cols)[cols_to_write].set_index(
+            "lancet_label").round(2)
+        df.rename(columns=col_name_map, inplace=True)
+        df.to_csv(outfile + ".csv")
+    else:
+        col_name_map = {"lancet_label": "Location",
+                        "Male_1990": "1990",
+                        "Male_2017": "2017",
+                        "Male_2050": "2050",
+                        "Male_2100": "2100",
+                        "Female_1990": "1990",
+                        "Female_2017": "2017",
+                        "Female_2050": "2050",
+                        "Female_2100": "2100",
+                        "Both_1990": "1990",
+                        "Both_2017": "2017",
+                        "Both_2050": "2050",
+                        "Both_2100": "2100"}
+
+        cols_to_write = ["level", "lancet_label", "Male_1990", "Male_2017",
+                         "Male_2050", "Male_2100", "Female_1990",
+                         "Female_2017", "Female_2050", "Female_2100",
+                         "Both_1990", "Both_2017", "Both_2050",
+                         "Both_2100"]
+
+        df = compile_data(past_lex, fut_lex, reviewer_cols)[cols_to_write]
+        write_table(df, outfile+".xlsx", stages, year_ids, col_name_map)
 
 
 if __name__ == "__main__":
@@ -465,6 +572,13 @@ if __name__ == "__main__":
         help="Name of FBD past lex data file. Taken as name of "
              "directory data file is found in \'.nc\' is not required"
     )
+    parser.add_argument(
+        "--reviewer_cols",
+        action="store_true",
+        help="Pass if output csv needs to have mean, lower, upper as seperate"
+             " columns"
+    )
     args = parser.parse_args()
 
-    main(past_lex=args.lex_past, fut_lex=args.lex_fut)
+    main(past_lex=args.lex_past, fut_lex=args.lex_fut,
+         reviewer_cols=args.reviewer_cols)

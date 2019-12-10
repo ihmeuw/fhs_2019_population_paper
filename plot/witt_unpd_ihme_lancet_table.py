@@ -11,7 +11,7 @@ It takes in 7 command line arguments: 3 population datasets (--fbd-pop,
 regions only or all level 3 regions (--supers_only).
 
 Example usage:
-python repos/fhs_2019_population_paper/plot/witt_unpd_ihme_lancet_table.py
+python witt_unpd_ihme_lancet_table.py
 --fbd-pop 20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15
 _hiv_all_combine
 --fbd-tfr 20190806_141418_fix_draw_bound_ccfx_to2110_combined
