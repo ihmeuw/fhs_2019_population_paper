@@ -278,12 +278,39 @@ def pop_declines():
         pct_decline_da > .5, drop=True).location_id.values)
     decline_over_50_locs = _location_id_to_name(decline_over_50_locs)
 
-    decline_china = _helper_round(
-        pct_decline_da.sel(location_id=6).values.item(0)*100, 1)
+    # compute % decline at draw level for uncertainty
+    forecast_draw_pop_dir = FBDPath(
+        f"/{settings.BASELINE_VERSIONS['population'].gbd_round_id}/"
+        f"future/population/"
+        f"{settings.BASELINE_VERSIONS['population'].version}")
+    forecast_draw_pop_path = forecast_draw_pop_dir / "population_agg.nc"
+    forecast_draw_pop_da = open_xr(forecast_draw_pop_path).data.sel(
+        sex_id=BOTH_SEX_ID, age_group_id=ALL_AGE_ID, scenario=0,
+        location_id=COUNTRIES)
+    past_draw_pop_dir = FBDPath(
+        f"/{settings.PAST_VERSIONS['population_draw2017'].gbd_round_id}/"
+        f"past/population/"
+        f"{settings.PAST_VERSIONS['population_draw2017'].version}")
+    past_draw_pop_path = past_draw_pop_dir / "population.nc"
+    past_draw_pop_da = open_xr(past_draw_pop_path).data.sel(
+        sex_id=BOTH_SEX_ID, age_group_id=ALL_AGE_ID, location_id=COUNTRIES)
+
+    da_china_2100 = forecast_draw_pop_da.sel(year_id=2100,location_id=6)
+    da_china_2017 = past_draw_pop_da.sel(year_id=2017,location_id=6)
+    pct_draw_decline_da = 1-(da_china_2100/da_china_2017)
+
+    decline_china = pct_draw_decline_da*100
+    decline_china_mean = _helper_round(
+        decline_china.mean("draw").values.item(0), 1)
+    decline_china_lower = _helper_round(
+        decline_china.quantile(dim="draw", q=[0.025]).values.item(0), 1)
+    decline_china_upper = _helper_round(
+        decline_china.quantile(dim="draw", q=[0.975]).values.item(0), 1)
 
     print(f"{decline_over_50_val} countries including {decline_over_50_locs} "
           f"in the reference scenario will have declines of greater than "
-          f"50% from 2017 by 2100; China will decline by {decline_china}%\n")
+          f"50% from 2017 by 2100; China will decline by {decline_china_mean} "
+          f"({decline_china_lower} to {decline_china_upper}).%\n")
 
 
 # Alternative scenarios suggest meeting the SDG targets for education and

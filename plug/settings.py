@@ -96,6 +96,7 @@ SDG_SCENARIO_VERSIONS = dict(
 
 PAST_VERSIONS = dict(
   population=VersionGBDRoundID("20181206_pop_1950_2017", 5),
+  population_draw2017=VersionGBDRoundID("20181207_gbd105_y2017_draw", 5),
   lex=VersionGBDRoundID("20191029_fhs_computed_from_20190109_version90_etl_gbd4_all_youth", 5),
   tfr=VersionGBDRoundID("20191114_va84", 5)
 )
