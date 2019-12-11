@@ -19,6 +19,7 @@ century.
 
 import xarray as xr
 import pandas as pd
+import numpy as np
 
 from fbd_core import db
 from fbd_core.file_interface import FBDPath, open_xr
@@ -31,6 +32,7 @@ gbd_round_id = settings.BASELINE_VERSIONS["population_mean_ui"].gbd_round_id
 
 # population versions
 PAST = settings.PAST_VERSIONS["population"].version
+PAST_DRAWS = settings.PAST_VERSIONS["population_draw2017"].version
 REF = settings.BASELINE_VERSIONS["population_mean_ui"].version
 REF_DRAWS = settings.BASELINE_VERSIONS["population"].version
 
@@ -39,43 +41,42 @@ def decline_pattern(ref):
     ref_da = ref.sel(sex_id=3,
                      age_group_id=22,
                      scenario=0,
-                     location_id=1,
-                     quantile= "mean")
+                     location_id=1)
 
-    ref_2018 = (ref_da.sel(year_id=2018) / 1e9).values.round(2)
-    ref_2100 = (ref_da.sel(year_id=2100) / 1e9).values.round(2)
+    ref_2018 = (ref_da.sel(year_id=2018) / 1e9).mean('draw').values
+    ref_2100 = (ref_da.sel(year_id=2100) / 1e9).mean('draw').values
+    diff = np.mean(ref_2100 - ref_2018)
 
-    print(f"2018 Population: {ref_2018} B"
-          f"2100 Population: {ref_2100} B"
-          f"Difference: {(ref_2100 - ref_2018).round(2)} B")
+    print(f"2018 Population: {ref_2018.round(2)} B \n"
+          f"2100 Population: {ref_2100.round(2)} B \n"
+          f"Difference: {diff.round(2)} B")
 
 
 def decline_50_plus(ref, past_pop):
     loc_list = list(db.get_locations_by_level(3).location_id)
     
-    ref_2018 = ref.sel(year_id=2018,
-                       scenario=0,
+    ref_2017 = past_pop.sel(year_id=2017,
                        age_group_id=22,
                        location_id=loc_list,
-                       sex_id=3,
-                       quantile="mean") / 1e9
+                       sex_id=3) / 1e9
 
     ref_2100 = ref.sel(year_id=2100,
-                       scenario=0,
                        age_group_id=22,
                        location_id=loc_list,
-                       sex_id=3,
-                       quantile="mean") / 1e9
+                       sex_id=3).sel(scenario=0, drop=True) / 1e9
 
-    change = (ref_2100 - ref_2018) / ref_2018
+    change = (ref_2100 - ref_2017) / ref_2017
+    mean_change = change.mean('draw')
 
-    fifty_plus = change.where(change < -0.5).dropna("location_id")
+    fifty_plus = change.mean('draw').where(change.mean('draw') < -0.5).dropna(
+        "location_id")
 
-    china = change.sel(location_id=6)
-    japan = change.sel(location_id=67)
+    china = change.sel(location_id=6).mean('draw')
+    japan = change.sel(location_id=67).mean('draw')
 
-    twentyfive_to_fifty = change.where(change < -0.25).where(change > -0.50)\
-                            .dropna("location_id")
+    twentyfive_to_fifty = mean_change\
+        .where(mean_change < -0.25).where(mean_change > -0.50)\
+        .dropna("location_id")
 
     ref_slice = past_pop.sel(location_id=fifty_plus.location_id.values,
                              age_group_id=22,
@@ -106,8 +107,8 @@ def old_young_ratio(change, ref_draws, past_pop):
                               sex_id=3,
                               year_id=2017).sum("age_group_id")
 
-    ratio_2017 = old_2017.sum("location_id").values / \
-                 young_2017.sum("location_id").values
+    ratio_2017 = (old_2017.sum("location_id") / \
+                 young_2017.sum("location_id")).mean('draw').values
 
     old_2100 = ref_draws.sel(location_id=twentyfive_plus.location_id,
                              age_group_id=list(old),
@@ -174,11 +175,15 @@ if __name__ == "__main__":
         f"/{gbd_round_id}/past/population/{PAST}/population.nc")
     past_pop = open_xr(past_pop_file).data
 
+    past_draw_ver = FBDPath(
+        f"/{gbd_round_id}/past/population/{PAST_DRAWS}/population.nc")
+    past_draw = open_xr(past_draw_ver).data
+
     ref_draws_ver = FBDPath(
         f"/{gbd_round_id}/future/population/{REF_DRAWS}/population_agg.nc")
     ref_draws = open_xr(ref_draws_ver).data
 
-    decline_pattern(ref)
-    change = decline_50_plus(ref, past_pop)
-    old_young_ratio(change, ref_draws, past_pop)
-    china_decline(past_pop, ref_draws)
+    decline_pattern(ref_draws)
+    change = decline_50_plus(ref_draws, past_draw)
+    old_young_ratio(change, ref_draws, past_draw)
+    china_decline(past_draw, ref_draws)
