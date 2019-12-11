@@ -70,7 +70,7 @@ def working_age():
     
     pop_df = pop_da.to_dataframe()
     pop_df = _add_location_name(pop_df)
-    pop_df = pop_df.sort_values(by='value', ascending=False).reset_index()
+    pop_df = pop_df.sort_values(by='population', ascending=False).reset_index()
     
     first = pop_df.location_name[0]
     second = pop_df.location_name[1]
