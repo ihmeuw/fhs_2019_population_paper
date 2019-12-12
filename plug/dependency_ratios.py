@@ -91,7 +91,8 @@ def dep_ratio(pop, total_emp, working_ages, old_ages):
     wp_sum = wp.sum("age_group_id")
 
     non_wp = pop.sel(age_group_id=list(old_ages)).sum("age_group_id") + \
-             (pop.sel(age_group_id=list(working_ages)) * (1 - total_emp.sel(year_id=2017))).sum("age_group_id")
+             (pop.sel(age_group_id=list(working_ages)) * \
+              (1 - total_emp.sel(year_id=2017))).sum("age_group_id")
 
     ratio = non_wp.sum(["sex_id", "location_id"]) / wp_sum.sum(
         ["sex_id", "location_id"])
@@ -107,7 +108,8 @@ def dep_ratio_above_one(pop, total_emp, working_ages, old_ages):
     wp_sum = wp.sum("age_group_id")
 
     non_wp = pop.sel(age_group_id=list(old_ages)).sum("age_group_id") + \
-             (pop.sel(age_group_id=list(working_ages)) * (1 - total_emp.sel(year_id=2017))).sum("age_group_id")
+             (pop.sel(age_group_id=list(working_ages)) * \
+              (1 - total_emp.sel(year_id=2017))).sum("age_group_id")
 
     ratio = non_wp.sum(["sex_id"]) / wp_sum.sum(
         ["sex_id"])
