@@ -126,7 +126,7 @@ def old_young_ratio(change, ref_draws, past_pop):
                     .mean('draw').values
     ratio_2100_lower = (old_2100.sum("location_id") /
                         young_2100.sum("location_id"))\
-                            .quantile(0.25, 'draw').values
+                            .quantile(0.025, 'draw').values
     ratio_2100_upper = (old_2100.sum("location_id") /
                         young_2100.sum("location_id"))\
                             .quantile(0.975, 'draw').values
@@ -157,7 +157,7 @@ def china_decline(past_pop, ref_draws):
     change = (ref_2100 - ref_2017) / ref_2017
 
     mean_change = change.mean('draw').values.round(2)
-    change_lower = change.quantile(0.25, 'draw').values.round(2)
+    change_lower = change.quantile(0.025, 'draw').values.round(2)
     change_upper = change.quantile(0.975, 'draw').values.round(2)
 
     print(f"The {mean_change}% (95% UI {change_lower}, {change_upper}%) "
