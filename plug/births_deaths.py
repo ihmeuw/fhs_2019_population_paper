@@ -79,8 +79,7 @@ def print_sentences(birth_diffs, death_diffs):
 if __name__ == "__main__":
 
     birth_diffs = return_ordered_cumulative_diff(
-        "live_births", 5, "20190822_annual_agg", "20190821_for_pop")
+        "live_births", 5, "20190822_annual_agg", "20191210_RELU_for_pop")
     death_diffs = return_ordered_cumulative_diff(
-        "death", 5, "20190822_annual_agg", "20190821_for_pop_deaths")
+        "death", 5, "20190822_annual_agg", "20191211_RELU_for_pop_deaths")
     print_sentences(birth_diffs, death_diffs)
-
