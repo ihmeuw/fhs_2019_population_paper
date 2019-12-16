@@ -32,18 +32,22 @@ NATS = LOCS[LOCS.level==3]
 lex_past_vers = sett.PAST_VERSIONS["lex"].version
 lex_past_dir = "/5/past/life_expectancy/"
 lex_past_path = FBDPath(lex_past_dir + lex_past_vers)
+print(lex_past_vers)
 
 lex_fut_vers = sett.BASELINE_VERSIONS["lex"].version
 lex_fut_dir = "/5/future/life_expectancy/"
 lex_fut_path = FBDPath(lex_fut_dir + lex_fut_vers)
+print(lex_fut_vers)
 
 pop_past_vers = sett.PAST_VERSIONS["population"].version
 pop_past_dir = "/5/past/population/"
 pop_past_path = FBDPath(pop_past_dir + pop_past_vers)
+print(pop_past_vers)
 
 pop_fut_vers = sett.BASELINE_VERSIONS["population_mean_ui"].version
 pop_fut_dir = "/5/future/population/"
 pop_fut_path = FBDPath(pop_fut_dir + pop_fut_vers)
+print(pop_fut_vers)
 
 lex_past = open_xr(lex_past_path / "lifetable_ds.nc").data["ex"].sel(
     year_id=range(1990, 2018), sex_id=3, age_group_id=2)
