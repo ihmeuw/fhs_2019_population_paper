@@ -18,6 +18,18 @@ DATE <- gsub("-", "", Sys.Date())
 FERT_AGE_GROUPS <- c(7:15)
 
 get_first_of_series <- function(vec){
+  # Takes a vector (vec) of 1s and 0s, and returns a vector (y) of the same
+  # length where for i in 1:length(y) y[i] == 1 if vec[i] is the first in a
+  # series of 1s. Else, y[i] == 0.
+  #
+  # ARGS:
+  #   vec (numeric):
+  #     Input vector of 1s and 0s
+  # 
+  # Returns:
+  #   y (numeric):
+  #     Output vector of 1s and 0s
+    
   y = numeric()
   for (i in 1:length(vec)) {
     if (i==1) {
@@ -33,6 +45,18 @@ get_first_of_series <- function(vec){
 }
 
 makeLimits <- function(start, end) {
+  # Takes a start and end years to create 10-year bins for mapping.
+  #
+  # ARGS:
+  #   start (numeric):
+  #     Start year
+  #   end (numeric):
+  #     End year
+  # 
+  # Returns:
+  #   lims (numeric):
+  #     Vector of bin limits
+  
   lims <- seq(start, end, 10)
   for (i in 1:length(lims)) {
     lims[i] <- ifelse((i %% 2 == 0) & (i != length(lims) - 1),
