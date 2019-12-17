@@ -284,7 +284,7 @@ def main(past_version, forecast_version, gbd_round_id, years):
         f"/{gbd_round_id}/future/population/{forecast_version}",
         root_dir="plot")
     plot_file.mkdir(exist_ok=True)
-    pdf_file = plot_file / "20191217test_figure_7_population_pyramids.pdf"
+    pdf_file = plot_file / "figure_7_population_pyramids.pdf"
 
     location_metadata = db.get_locations_by_max_level(3)
 
