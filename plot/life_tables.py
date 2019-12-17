@@ -3,9 +3,10 @@ This code creates appendix life tables in lancet formatted excel sheets for all
 forecasting locations. A single xlsx file is created for each location and
 given the filename "sort-order_loc-name_year" that is put in the output
 directory. Using a vba script to merge all resulting excel files you can remove
-the row of "-" included for formatting purposes then print as pdf to get final
-table result. I've included the vba script used to merge all xlsx files in this
-program as a comment at the bottom
+the row of "-" included for formatting purposes then print as pdf to get the
+final pdf table result. I've included the vba script used to merge
+all xlsx files in this program as a comment at the bottom with brief
+instructions for use
 Author Sam Farmer
 """
 
@@ -259,8 +260,11 @@ def write_table(final_df, outfile, stages, years, col_name_map):
 
 
 def sort_age_groups(df):
-    """
-
+    """Creates categorical orginization for age groups in df
+    Args:
+        df (dataframe): dataframe containing Age Group column
+    returns:
+        df (dataframe): dataframe sorted by age group
     """
     df["Age Group"] = pd.Categorical(df["Age Group"],
                                      ("Early Neonatal", "Late Neonatal",
@@ -280,6 +284,10 @@ def blank_row(df):
     the dataframe. This is required to have the column labels
     show up in the in the worksheet that is generated. Can be removed once
     tables are completed.
+    Args:
+        df (dataframe): dataframe to be altered
+    Returns:
+        df (dataframe): dataframe with first row containing only "-"
     """
     df.loc[-1] = (pd.Series("-"))
     df.index = df.index + 1
@@ -287,6 +295,13 @@ def blank_row(df):
 
 
 def make_table(passed_locs_df, outfile):
+    """
+    Args:
+        passed_locs_df (dataframe): dataframe containing the per location life
+        table information
+        outfile (str): String name of the excel file to be saved
+    Returns: None
+    """
     stages = ["Male", "Female"]
     year_ids = YearRange(1990, 2018, 2100)
 
@@ -309,6 +324,14 @@ def make_table(passed_locs_df, outfile):
 
 
 def main(directory):
+    """
+    Args:
+        directory (str): directory containing separate lifetables per location,
+        and year e.g. (1_global_2017)
+    Returns: None
+    """
+    if not os.path.isdir("output"):
+        os.makedirs("output", exist_ok=True)
     for subdirs, dirs, files in os.walk(csvs):
         for filename in files:
             if os.path.isfile(csvs+filename) and filename[0] != ".":
@@ -324,7 +347,7 @@ def main(directory):
                 data.iat[0, 13] = 0
                 sort_order = int(gbd_loc_df[
                     gbd_loc_df["location_id"] == loc_id]["sort_order"])
-                outfile = (f"output_test/{sort_order}_{country}_{year}
+                outfile = (f"output/{sort_order}_{country}_{year}
                            _table.xlsx")
                 make_table(data, outfile)
 
@@ -337,7 +360,7 @@ if __name__ == "__main__":
 The below vba script prompts the user to choose which excel files they wish to
 copy in the directory that the xlsm is placed in and inserts them as a new
 sheet in the workbook. To use, copy and past all code following the first
-'Sub' to the 'End Sub' line into an xlsm files visual basic editor under the
+'Sub' to the 'End Sub' line into an xlsm file's visual basic editor under the
 developer tab then select it from the macro option in the developer tab.
 
 Sub MergeExcelFiles()
