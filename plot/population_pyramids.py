@@ -1,27 +1,34 @@
 '''
 This makes the population pyramids used for the population paper 2019
 '''
-import seaborn as sns
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
-from matplotlib.backends.backend_pdf import PdfPages
-import xarray as xr
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-
-from fbd_core import db, YearRange
-from fbd_core.file_interface import FBDPath, open_xr
+import seaborn as sns
+import xarray as xr
+from fbd_core import db, YearRange, argparse
 from fbd_core.etl import expand_dimensions, resample, Aggregator
+from fbd_core.file_interface import FBDPath, open_xr
+from matplotlib.backends.backend_pdf import PdfPages
+
+import fhs_2019_population_paper.plug.settings as settings
 
 ALL_AGE_GROUP_IDS = [1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 30, 31, 32, 235]
 SEX_IDS = [1, 2]
 
+PAST = settings.PAST_VERSIONS["population"].version
+REF = settings.BASELINE_VERSIONS["population_mean_ui"].version
+REF_DRAWS = settings.BASELINE_VERSIONS["population"].version
+GBD_ROUND_ID = settings.BASELINE_VERSIONS["population"].gbd_round_id
+YEARS = YearRange(1990, 2018, 2100)
 
-def prep_pop_da(past_version, forecast_version, gbd_round_id):
+
+def prep_pop_da(past_version, forecast_version, gbd_round_id, years):
     forecast_pop_file = FBDPath(
         f"/{gbd_round_id}/future/population/{forecast_version}/"
-        f"population_agg.nc")
-    forecast_fhs = open_xr(forecast_pop_file).data.sel(quantile='mean')
+        f"population_combined.nc")
+    forecast_fhs = open_xr(forecast_pop_file).data.sel(quantile='mean', drop=True)
 
     past_fhs_file = FBDPath(
         f"/{gbd_round_id}/past/population/{past_version}/population.nc")
@@ -36,10 +43,10 @@ def prep_pop_da(past_version, forecast_version, gbd_round_id):
     fhs_all_scenarios = xr.concat([past_fhs, forecast_fhs], dim="year_id")
 
     fhs = fhs_all_scenarios.sel(scenario=[-1, 0, 1])
-    alt_sdg = fhs_all_scenarios.sel(scenario=3)
-    alt_99 = fhs_all_scenarios.sel(scenario=2)
+    alt_sdg = fhs_all_scenarios.sel(scenario=[3])
+    alt_99 = fhs_all_scenarios.sel(scenario=[2])
 
-    ages = db.get_ages().query("age_group_id in @all_age_group_ids")
+    ages = db.get_ages().query("age_group_id in @ALL_AGE_GROUP_IDS")
     days = ages[["age_group_id", "age_group_days_start", "age_group_days_end"]]
     days["mean_age"] = (days["age_group_days_end"] - (
                 days["age_group_days_end"] - days[
@@ -65,7 +72,10 @@ def prep_pop_da(past_version, forecast_version, gbd_round_id):
 
 
 def pop_plot(avg_age_fhs, avg_age_sdg, avg_age_99, ds, ds_sdg, ds_99,
-             location_id=1):
+             years, location_id=1):
+    location_metadata = db.get_locations_by_max_level(3)
+
+    ages = db.get_ages().query("age_group_id in @ALL_AGE_GROUP_IDS")
     scenarios = [
         {"year": years.past_end, "scenario": 0, "name": years.past_end,
          "color": "black"},
@@ -77,11 +87,11 @@ def pop_plot(avg_age_fhs, avg_age_sdg, avg_age_99, ds, ds_sdg, ds_99,
          "name": "Faster Met Need and Education Pace", "color": "forestgreen"},
     ]
 
-    alt_scenario_sdg = [{"year": years.forecast_end, "scenario": -1,
+    alt_scenario_sdg = [{"year": years.forecast_end, "scenario": 3,
                          "name": "SDG Met Need and Education Pace",
                          "color": "#ff7f00"}]
 
-    alt_scenario_99 = [{"year": years.forecast_end, "scenario": 1,
+    alt_scenario_99 = [{"year": years.forecast_end, "scenario": 2,
                         "name": "Fastest Met Need and Education Pace",
                         "color": "#984ea3"}]
 
@@ -164,7 +174,6 @@ def pop_plot(avg_age_fhs, avg_age_sdg, avg_age_99, ds, ds_sdg, ds_99,
         df = alt_df_sdg.query(
             "sex_id == 1 & scenario == {} & year_id == {}".format(c["scenario"],
                                                                   c["year"]))
-        print(df['age'].values.tolist() + [0])
         ax_male.step(
             x=df["population"].values.tolist() + [0],
             y=df["age"].values.tolist() + [ages.shape[0]],
@@ -257,7 +266,7 @@ def pop_plot(avg_age_fhs, avg_age_sdg, avg_age_99, ds, ds_sdg, ds_99,
     sns.despine(ax=ax_female)
 
     fig.suptitle(
-        locs.query("location_id == @location_id")["location_name"].values[0],
+        location_metadata.query("location_id == @location_id")["location_name"].values[0],
         fontsize=28)
 
     fig.set_size_inches(14, 8)
@@ -268,23 +277,29 @@ def pop_plot(avg_age_fhs, avg_age_sdg, avg_age_99, ds, ds_sdg, ds_99,
     return fig
 
 
-def main(past_version, forecast_version, gbd_round_id):
+def main(past_version, forecast_version, gbd_round_id, years):
     avg_age_fhs, avg_age_sdg, avg_age_99, ds, ds_sdg, ds_99 = prep_pop_da(
-        past_version, forecast_version, gbd_round_id)
+        past_version, forecast_version, gbd_round_id, years)
     plot_file = FBDPath(
-        f"/{gbd_round_id}/future/population/{forecast_pop_version}",
+        f"/{gbd_round_id}/future/population/{forecast_version}",
         root_dir="plot")
     plot_file.mkdir(exist_ok=True)
-    pdf_file = plot_file / "figure_7_population_pyramids.pdf"
+    pdf_file = plot_file / "20191217test_figure_7_population_pyramids.pdf"
+
+    location_metadata = db.get_locations_by_max_level(3)
+
+    location_hierarchy = location_metadata.set_index(
+        "location_id").to_xarray()["parent_id"]
 
     with PdfPages(pdf_file) as pdf:
         for l in location_hierarchy["location_id"]:
             fig=pop_plot(
                 avg_age_fhs, avg_age_sdg, avg_age_99, ds, ds_sdg, ds_99,
-                location_id=l)
+                years, location_id=l)
             pdf.savefig(fig)
             # plt.show()
 
 
 if __name__ == "__main__":
-    
+
+    main(PAST, REF, GBD_ROUND_ID, YEARS)
