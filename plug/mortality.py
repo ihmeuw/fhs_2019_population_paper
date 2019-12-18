@@ -37,19 +37,34 @@ ALT_99 = settings.FASTEST_SCENARIO_VERSIONS["lex"].version
 ALT_SDG = settings.SDG_SCENARIO_VERSIONS["lex"].version
 
 
-def lex_min_max(lex_ref_version):
-    min_val = lex_ref_version.sel(scenario=0,
+def lex_min_max(lex_ref_mean_version, lex_ref_version):
+    lex_da = lex_ref_mean_version.sel(scenario=0,
                               year_id=2100,
                               sex_id=3,
-                              age_group_id=2).min().values
+                              age_group_id=2)
+    min_loc = lex_da.where(lex_da==lex_da.min(),
+                           drop=True).squeeze().location_id.values
+    max_loc = lex_da.where(lex_da==lex_da.max(),
+                           drop=True).squeeze().location_id.values
 
-    max_val = lex_ref_version.sel(scenario=0,
-                              year_id=2100,
-                              sex_id=3,
-                              age_group_id=2).max().values
+    min_val = lex_da.min().values
+    max_val = lex_da.max().values
+    lex_min_and_max_da = lex_ref_version.sel(scenario=0,
+                                          year_id=2100,
+                                          sex_id=3,
+                                          age_group_id=2,
+                                          location_id=[min_loc, max_loc])
+    lex_lower = lex_min_and_max_da.quantile(0.025, dim="draw")
+    lex_upper = lex_min_and_max_da.quantile(0.975, dim="draw")
+    min_lower = lex_lower.sel(location_id=min_loc)
+    min_upper = lex_upper.sel(location_id=min_loc)
+    max_lower = lex_lower.sel(location_id=max_loc)
+    max_upper = lex_upper.sel(location_id=max_loc)
 
     print_statement = f"Country life expectancy in 2100 for ref scenario " \
-        f"range from {min_val.round(1)} to {max_val.round(1)}"
+        f"range from {min_val.round(1)} with UI {min_lower.values.round(1)}, " \
+        f"{min_upper.values.round(1)} to {max_val.round(1)} with UI " \
+        f"{max_lower.values.round(1)}, {max_upper.values.round(1)}."
 
     print(print_statement)
 
@@ -101,15 +116,15 @@ def low_lex_countries(lex_ref_version):
 def range_of_lex(lex_ref, lex_99, alt_sdg):
     slower = lex_ref.mean('draw').values
     slower_lower = lex_ref.quantile(0.025, dim="draw")
-    slower_upper = lex_ref.quantile(0.95, dim="draw")
+    slower_upper = lex_ref.quantile(0.975, dim="draw")
 
     fastest = lex_99.mean('draw').values
     fastest_lower = lex_99.quantile(0.025, dim="draw")
-    fastest_upper = lex_99.quantile(0.95, dim="draw")
+    fastest_upper = lex_99.quantile(0.975, dim="draw")
 
     sdg = alt_sdg.mean('draw').values
     sdg_lower = alt_sdg.quantile(0.025, dim="draw")
-    sdg_upper = alt_sdg.quantile(0.95, dim="draw")
+    sdg_upper = alt_sdg.quantile(0.975, dim="draw")
 
     print_statement = f"2100 global life exp in slower scenario:"\
         f"{slower.round(1)} with UI: {slower_lower.values.round(1)},"\
@@ -142,7 +157,7 @@ if __name__ == "__main__":
     alt_sdg = open_xr(FBDPath(
         f"/{gbd_round_id}/future/life_expectancy/{ALT_SDG}/lex_agg.nc")).data
 
-    min_val, max_val = lex_min_max(lex_ref_mean)
+    min_val, max_val = lex_min_max(lex_ref_mean, lex_ref)
     std_dev_2017, std_dev_2100 = std_dev_year(lex_ref_mean,
                                               lex_past)
     low_lex = low_lex_countries(lex_ref_mean)
@@ -156,10 +171,10 @@ if __name__ == "__main__":
                          location_id=1,
                          sex_id=3,
                          age_group_id=2,
-                         scenario=-1)
+                         scenario=2)
     alt_sdg_2100 = alt_sdg.sel(year_id=2100,
                          location_id=1,
                          sex_id=3,
                          age_group_id=2,
-                         scenario=-1)
+                         scenario=3)
     slower, fastest, sdg = range_of_lex(lex_ref_2100, alt_99_2100, alt_sdg_2100)
