@@ -104,8 +104,8 @@ def compile_data(tfr_fut_version, tfr_past_version, reviewer_cols):
                     "mean", "lower", "upper",
                     "year_id"]
         val_cols = ["mean", "lower", "upper"]
-        past_df_val = add_ui(past_tfr_lims)[tfr_cols]
-        fut_df_val = add_ui(fut_lims_df)[tfr_cols]
+        past_df_val = create_lancet_float_col(past_tfr_lims)[tfr_cols]
+        fut_df_val = create_lancet_float_col(fut_lims_df)[tfr_cols]
         combined_tfr = past_df_val.merge(fut_df_val, how="outer",
                                          on=["year_id", "location_id",
                                              "scenario", "mean",
@@ -118,8 +118,8 @@ def compile_data(tfr_fut_version, tfr_past_version, reviewer_cols):
         get_lims(past_tfr_lims)
         get_lims(fut_lims_df)
         tfr_cols = ["location_id", "scenario", "value", "year_id"]
-        past_df_val = add_ui(past_tfr_lims)[tfr_cols]
-        fut_df_val = add_ui(fut_lims_df)[tfr_cols]
+        past_df_val = create_lancet_float_col(past_tfr_lims)[tfr_cols]
+        fut_df_val = create_lancet_float_col(fut_lims_df)[tfr_cols]
 
         combined_tfr = past_df_val.merge(fut_df_val, how="outer",
                                          on=["year_id", "location_id",
@@ -136,7 +136,7 @@ def compile_data(tfr_fut_version, tfr_past_version, reviewer_cols):
     return (final_df)
 
 
-def floating_style(list_nums=None):
+def floating_style(list_nums):
     """
     Convert the decimal point in the UI to a lancet style floating decimal for
     both past and future data
@@ -151,13 +151,13 @@ def floating_style(list_nums=None):
     return floating_style
 
 
-def get_lims(lims_df=None):
+def get_lims(lims_df):
     for value in ["mean", "lower", "upper"]:
         value_lims = lims_df[value]
         lims_df[value] = floating_style(value_lims)
 
 
-def add_ui(df, df_type="mean"):
+def create_lancet_float_col(df, df_type):
     """
     Function to add ui to the mean column creating one value ex:
     "2.17 (lowerui - upperui)"
@@ -165,7 +165,6 @@ def add_ui(df, df_type="mean"):
     for col in ["mean", "lower", "upper"]:
         if df_type == "mean":
             df[col] = df[col]
-        # df[col] = df[col].apply(lambda x: round(x, 2))
 
     df["value"] = (df["mean"].astype(str) + "  (" + df["lower"].astype(str)
                    + " - " + df["upper"].astype(str) + ")")

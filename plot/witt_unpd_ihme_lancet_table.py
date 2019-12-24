@@ -27,7 +27,7 @@ from fbd_core.file_interface import FBDPath, open_xr
 from datetime import datetime
 
 
-ext_year = 2095
+EXT_YEAR = 2095
 
 #  Height for different cell types
 CELL_HT = {
@@ -154,10 +154,10 @@ def compile_data(fbd_pop_version, fbd_tfr_version, wpp_pop_version,
 
     # condense down to only the data we are interested in
     witt_tfr_100 = witt_tfr_xr.sel(
-        year_id=ext_year).drop(
+        year_id=EXT_YEAR).drop(
         "year_id").squeeze().rename("witt_tfr").to_dataframe().reset_index()
     wpp_tfr_100 = wpp_tfr_xr.sel(
-       year_id=ext_year).drop(["year_id", "sex_id"]).squeeze().rename(
+       year_id=EXT_YEAR).drop(["year_id", "sex_id"]).squeeze().rename(
        "unpd_tfr").to_dataframe().reset_index()
     ihme_tfr_100 = fut_fertility.sel(
         year_id=2100, scenario=0, quantile="mean").rename("ihme_tfr").drop(

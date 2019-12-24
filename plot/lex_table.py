@@ -10,7 +10,7 @@ columns
 example call:
 python lex_table.py
 --lex_past 20191029_fhs_computed_from_20190109_version90_etl_gbd4_all_youth
---lex_fut 20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all_gbd4_extrap
+--lex_fut 20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_gbd4_extrap_aggregation_fixed
 """
 
 import datetime
@@ -45,6 +45,10 @@ INDENT_MAP = {
 """
 
 
+LOWER = 0.025
+UPPER = 0.975
+
+
 def pivot_on_col(df, value):
     """
     Args:
@@ -74,9 +78,6 @@ def add_ui(df):
             dataframe with new "value" column containing a string formated with
             uncertainty interval in the lancet style e.g. 63·2 (63·1 - 63·4)
     """
-    for col in ["mean", "lower", "upper"]:
-        df[col] = df[col]
-
     df["value"] = (df["mean"].astype(str) +
                    "  (" + df["lower"].astype(str) + " - "
                    + df["upper"].astype(str)+")")
@@ -178,10 +179,10 @@ def compile_data(past_lex, fut_lex, reviewer_cols):
     fut_lex_mn = fut_life.mean("draw")
     past_lex_mn = past_life.mean("draw")
 
-    fut_lex_lims = fut_life.quantile([0.025, 0.975], dim="draw")
+    fut_lex_lims = fut_life.quantile([LOWER, UPPER], dim="draw")
     fut_lex_lims.coords["quantile"] = ["lower", "upper"]
 
-    past_lex_lims = past_life.quantile([0.025, 0.975], dim="draw")
+    past_lex_lims = past_life.quantile([LOWER, UPPER], dim="draw")
     past_lex_lims.coords["quantile"] = ["lower", "upper"]
 
     fut_lex_df = fut_lex_mn.to_dataframe(
