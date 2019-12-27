@@ -209,7 +209,7 @@ def pull_reshape_pop(gbd_round_id, pop_version, location_ids):
     pop_2017_da = melt_to_xarray(pop_2017)
     
     # Get future pops
-    pop_fut = open_xr("5/future/population/"
+    pop_fut = open_xr(f"{gbd_round_id}/future/population/"
                       f"{pop_version}/population_combined.nc").data
     
     pop_fut_sel = pop_fut.sel(location_id=location_ids, scenario=SCENARIOS,
@@ -287,7 +287,8 @@ def pull_reshape_tfr(gbd_round_id, tfr_version, location_ids):
     tfr_2017_da = melt_to_xarray(tfr_2017)
     
     # Get future TFR
-    tfr_fut = open_xr(f"5/future/tfr/{tfr_version}/tfr_combined.nc").data
+    tfr_fut = open_xr(f"{gbd_round_id}/future/tfr/"
+                      f"{tfr_version}/tfr_combined.nc").data
     
     tfr_fut_sel = tfr_fut.sel(location_id=location_ids, scenario=SCENARIOS,
                               year_id=YEARS.forecast_years)
