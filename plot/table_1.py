@@ -178,8 +178,27 @@ def get_max_pop_year(group):
 
 
 def pull_reshape_pop(gbd_round_id, pop_version, location_ids):
+    """Pulls year 2017 GBD round 5 populations, converts it an xarray dataarray,
+    pulls forecast population, and concatenates the dataarrays. The new array is
+    then converted to a pandas dataframe. Peak population and peak population
+    year are pulled for each location in the dataframe. All required data are
+    then reshaped and merged for downstream table production.
+
+    Args:
+        gbd_round_id (int):
+            GBD round.
+        pop_version (str):
+            Forecast populations version.
+        location_ids (list):
+            List of location IDs to pull from both past and future data.
+    Returns:
+        pop_final_df (pandas dataframe):
+            Dataframe with all required population data, reshaped for downstream
+            table production.
+    """
     p_end = YEARS.past_end
     f_end = YEARS.forecast_end
+
     # Get 2017 GBD pops
     pop_2017 = get_population(gbd_round_id=gbd_round_id, age_group_id=22,
                               sex_id=3, location_id=location_ids,
@@ -236,6 +255,24 @@ def pull_reshape_pop(gbd_round_id, pop_version, location_ids):
 
 
 def pull_reshape_tfr(gbd_round_id, tfr_version, location_ids):
+    """Pulls year 2017 GBD round 5 TFR, converts it an xarray dataarray,
+    pulls forecast TFR, and concatenates the dataarrays. The new array is
+    then converted to a pandas dataframe. All required data are then reshaped
+    and merged for downstream table production.
+
+    Args:
+        gbd_round_id (int):
+            GBD round.
+        tfr_version (str):
+            Forecast TFR version.
+        location_ids (list):
+            List of location IDs to pull from both past and future data.
+    Returns:
+        tfr_final_df (pandas dataframe):
+            Dataframe with all required TFR data, reshaped for downstream table
+            production.
+    """
+
     p_end = YEARS.past_end
     f_end = YEARS.forecast_end
     # Get 2017 GBD TFR
