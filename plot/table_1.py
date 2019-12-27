@@ -49,10 +49,34 @@ COL_NAME_MAP = {
     "peak_pop_value": "Peak Population (year)",
     "value_2017_pop_ref": "2017",
     "value_2100_pop_ref": "2100 Reference Scenario",
-    "value_2100_pop_sdg":"2100 SDG Scenario",
+    "value_2100_pop_sdg": "2100 SDG Scenario",
     "value_2017_tfr_ref": "2017",
-    "value_2100_tfr_ref":"2100 Reference Scenario",
+    "value_2100_tfr_ref": "2100 Reference Scenario",
     "value_2100_tfr_sdg": "2100 SDG Scenario",
+}
+
+REVIEW_COL_NAME_MAP = {
+    "lancet_label": "Location name",
+    "mean_2017_pop_ref": "Population mean 2017",
+    "lower_2017_pop_ref": "Population lower 2017",
+    "upper_2017_pop_ref": "Population upper 2017",
+    "mean_2100_pop_ref": "Reference population mean 2100",
+    "lower_2100_pop_ref": "Reference population lower 2100",
+    "upper_2100_pop_ref": "Reference population upper 2100",
+    "mean_2100_pop_sdg": "SDG population mean 2100",
+    "lower_2100_pop_sdg": "SDG population lower 2100",
+    "upper_2100_pop_sdg": "SDG population upper 2100",
+    "peak_pop": "Peak population",
+    "peak_year": "Peak population year",
+    "mean_2017_tfr_ref": "TFR mean 2017",
+    "lower_2017_tfr_ref": "TFR lower 2017",
+    "upper_2017_tfr_ref": "TFR upper 2017",
+    "mean_2100_tfr_ref": "Reference TFR mean 2100",
+    "lower_2100_tfr_ref": "Reference TFR lower 2100",
+    "upper_2100_tfr_ref": "Reference TFR upper 2100",
+    "mean_2100_tfr_sdg": "SDG TFR mean 2100",
+    "lower_2100_tfr_sdg": "SDG TFR lower 2100",
+    "upper_2100_tfr_sdg": "SDG TFR upper 2100"
 }
 
 
@@ -504,6 +528,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--gbd-round-id", type=int, required=True,
         help="The GBD round associated with the data.")
+    parser.add_argument(
+        "--output-review-table", action="store_true",
+        help="Outputs table for reviewers along with Lancet-style table."
+        )
 
     args = parser.parse_args()
 
@@ -557,3 +585,10 @@ if __name__ == "__main__":
         print(f"{plot_dir} already exists.")
 
     write_table(final_df, filepath, stages)
+
+    if args.output_review_table:
+        review_fname = date.today().strftime("%Y%m%d") + "_table_1_review.csv"
+        review_cols = list(REVIEW_COL_NAME_MAP.keys())
+        review_df = merged_df[review_cols].drop_duplicates()
+        review_df.rename(columns=REVIEW_COL_NAME_MAP, inplace=True)
+        review_df.to_csv(plot_dir + review_fname, index=False)
