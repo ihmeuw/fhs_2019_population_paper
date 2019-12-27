@@ -16,6 +16,8 @@ PLOT_PATH <- "/ihme/forecasting/plot/5/future/nrr"
 DATE <- gsub("-", "", Sys.Date())
 
 FERT_AGE_GROUPS <- c(7:15)
+GBD_ROUND <- 5
+GBD_YEAR <- 2017
 
 get_first_of_series <- function(vec){
   # Takes a vector (vec) of 1s and 0s, and returns a vector (y) of the same
@@ -67,27 +69,36 @@ makeLimits <- function(start, end) {
   return(lims)
 }
 
-prettyRound <- function(x, y) sprintf(paste0("%.", y, "f"), round(x, y))
-
-makeLabs <- function (limits, roundto, percent = FALSE) {
-  labs <- paste0("Before ", prettyRound(limits[2], roundto))
+makeLabs <- function(limits, roundto) {
+  # Takes a numeric vector of map bin limits to create labels for the bins.
+  #
+  # ARGS:
+  #   limits (numeric):
+  #     Vector of map bin limits
+  #   roundto (numeric):
+  #     How many decimals to round to
+  # 
+  # Returns:
+  #   labs (character):
+  #     Vector of bin labels
+  labs <- paste0("Before ", round(limits[2], roundto))
   for (i in seq(2, length(limits) - 2)) {
-    labs <- c(labs, paste0(prettyRound(limits[i], roundto),
+    labs <- c(labs, paste0(round(limits[i], roundto),
                            " to ",
-                           prettyRound(limits[i + 1] - 1, roundto)))
+                           round(limits[i + 1] - 1, roundto)))
   }
   labs <- c(labs,
-            paste0(prettyRound(limits[length(limits) - 1], roundto),
+            paste0(round(limits[length(limits) - 1], roundto),
                    " onward"))
-  if (percent) labs <- paste0(labs, "%")
   return(labs)
 }
 
-# Pull and wrangle data
-locs <- get_location_metadata(location_set_id = 35, gbd_round_id = 5)[level==3]
+# PULL AND WRANGLE DATA
+locs <- get_location_metadata(location_set_id = 35,
+                              gbd_round_id = GBD_ROUND)[level==3]
 
-# ASFR
-asfr_past <- get_covariate_estimates(covariate_id=13, gbd_round_id=5,
+## ASFR
+asfr_past <- get_covariate_estimates(covariate_id=13, gbd_round_id=GBD_ROUND,
                                      age_group_id = FERT_AGE_GROUPS,
                                      location_id = locs$location_id,
                                      sex_id = 2, status = "best") %>%
@@ -104,7 +115,7 @@ asfr <- rbindlist(list(asfr_past, asfr_fut))
 
 setnames(asfr, "value", "asfr")
 
-# nLx
+## nLx
 past_group_cols <- c("age_group_id", "location_id", "year_id", "sex_id")
 
 nlx_past <- setDT(
@@ -128,35 +139,42 @@ nlx_fut <- setDT(
 nlx <- rbindlist(list(nlx_past, nlx_fut), use.names = TRUE)
 setnames(nlx, "value", "nlx")
 
-# prop female at birth
-srb_past <- get_mort_outputs("birth_sex_ratio", "estimate",  gbd_year = 2017,
+## prop female at birth
+srb_past <- get_mort_outputs("birth_sex_ratio", "estimate",
+                             gbd_year = GBD_YEAR,
                              location_ids = locs$location_id) %>%
   .[, .(year_id, location_id, mean)]
 
 srb_fut <- foreach(i = c(2018:2100), .combine = "rbind") %do% {
-  sub <- srb_past[year_id==2017] %>% .[, year_id := i]
+  sub <- srb_past[year_id==GBD_YEAR] %>% .[, year_id := i]
 }
 
 srb <- rbindlist(list(srb_past, srb_fut))
 srb[, prop_fem := (1/mean)/(1+(1/mean))] %>% .[, mean := NULL]
 
-# calculate net reproductive rate
+## calculate net reproductive rate
 nrr <- merge(asfr, nlx, by=c("location_id", "year_id", "age_group_id")) %>%
   merge(srb, by=c("location_id", "year_id"))
 nrr[, nrr := sum(asfr * nlx * prop_fem), by =.(location_id, year_id)]
 
-nrr_only <- copy(nrr)[, c("age_group_id", "nlx", "prop_fem", "asfr") := NULL] %>%
+nrr_only <- copy(nrr)[
+  , c("age_group_id", "nlx", "prop_fem", "asfr") := NULL
+  ] %>%
   unique()
 
-# find first year each location drops below replacement
+## find first year each location drops below replacement
 frst_yr_below_repl <- copy(nrr_only)[, below1 := ifelse(nrr<1, 1, 0)]
-frst_yr_below_repl[, first_of_series := get_first_of_series(below1), by="location_id"]
+frst_yr_below_repl[, first_of_series := get_first_of_series(below1),
+                   by="location_id"]
 frst_yr_below_repl[, yr_of_drop := ifelse(first_of_series == 1, year_id, 0)]
+## use max() to get the MOST RECENT drop below replacement
 frst_yr_below_repl[, mapvar := max(yr_of_drop), by="location_id"]
 frst_yr_below_repl <- frst_yr_below_repl[, .(location_id, mapvar)] %>% unique()
+## any location that does not go below replacement is set to 2101 in mapvar
 frst_yr_below_repl[, mapvar := ifelse(mapvar==0, 2101, mapvar)]
 
-# mapping
+
+# MAPPING
 mapdf <- merge(frst_yr_below_repl, locs[, .(location_id, ihme_loc_id)])
 
 # pre-mapping steps
@@ -182,10 +200,11 @@ gbd_map(data = mapdf,
 dev.off()
 
 
-################
-## diagnostics
+################################################################################
+# DIAGNOSTICS
+# NRR and TFR/2.1 should be roughly the same
 
-tfr_past <- get_covariate_estimates(covariate_id=149, gbd_round_id=5,
+tfr_past <- get_covariate_estimates(covariate_id=149, gbd_round_id=GBD_ROUND,
                                     location_id = locs$location_id,
                                     status = "best") %>%
   .[, .(year_id, location_id, mean_value)]
@@ -204,7 +223,7 @@ tfr[, tfr_ovr_2.1 := value/2.1]
 tfr2nrr <- merge(tfr, nrr_only, by=c("location_id", "year_id"))
 setnames(tfr2nrr, "nrr", "NRR")
 tfr2nrr <- merge(tfr2nrr, locs[, .(location_id, ihme_loc_id,
-                                   super_region_name, location_ascii_name)],
+                               super_region_name, location_ascii_name)],
                  by="location_id")
 
 timeseries <- function(df){
@@ -232,6 +251,7 @@ timeseries <- function(df){
 }
 
 timeseries(tfr2nrr)
+
 
 scatter <- function(df){
   
