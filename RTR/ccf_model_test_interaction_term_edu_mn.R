@@ -65,3 +65,29 @@ ggplot(subset(model_data, ccf < 2.1)) +
              alpha = 0.4) +
   labs(x = "Observed CCF", y = "Predicted CCF") +
   ggtitle("Predicted vs Observed CCF: include EDU:MN interaction?\nSubset CCF<2.1")
+
+predict(model,
+        newdata = data.frame(edu=16, mn=0.95),
+        interval = "confidence")
+predict(model_int,
+        newdata = data.frame(edu=16, mn=0.95),
+        interval = "confidence")
+predict(model_no_mn,
+        newdata = data.frame(edu=16, mn=0.95),
+        interval = "confidence")
+
+
+new_dat <- expand.grid(
+  edu = seq(0, 18, 0.01),
+  mn = seq(0, 1, 0.1)
+)
+new_dat$fit <- predict(model, newdata = new_dat)
+new_dat$fit_int <- predict(model_int, newdata = new_dat)
+
+ggplot(new_dat) +
+  geom_line(aes(x = edu, y = fit,
+                linetype = "No MN:EDU interaction",
+                color = mn, group = mn)) +
+  geom_line(aes(x = edu, y = fit_int,
+                linetype = "With MN:EDU interaction",
+                color = mn, group = mn))
