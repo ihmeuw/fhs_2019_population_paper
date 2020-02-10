@@ -48,6 +48,7 @@ for Nigeria on one side, and China, India, and Indonesia on the other.
 
 import pandas as pd
 import xarray as xr
+import warnings
 
 from fbd_core import db
 from fbd_core.etl.transformation import expand_dimensions
@@ -63,7 +64,9 @@ N_DECIMALS = 2
 COUNTRIES = db.get_locations_by_level(3).location_id.values.tolist()
 
 PAST_POP_VERSION = sett.PAST_VERSIONS["population"].version
+print(PAST_POP_VERSION)
 FUTURE_POP_VERSION = sett.BASELINE_VERSIONS["population_mean_ui"].version
+print(FUTURE_POP_VERSION)
 
 def pull_tfr(future_tfr_version, scenarios = [-1,0,1]):
     tfr_path = FBDPath("{gbd_round_id}/future/tfr/{version}".format(
@@ -102,9 +105,6 @@ def super_region_pop(pop_da):
     peak_years = peaks.year_id
     if (peak_years < 2100).all() != True:
         warnings.warn("Not all super regions peak!")
-    supreg_peak_pre2100 = ("population size in the remaining "
-                           "super-regions will peak in a future "
-                           "before year 2100")
     
     supreg_17_100 = supreg_df[supreg_df.year_id.isin([2017, 2100])].drop(
         "quantile", axis=1).set_index(
@@ -154,18 +154,25 @@ def pop_largest_countries(pop_da):
         ind_peak_year == ind_peak_year.max(), drop=True).year_id.values[0]
     ind_peak_yr_da = pop_da.sel(location_id=163, year_id=ind_peak_year).drop(
         "year_id")
+
+    usa_peak_year = pop_da.sel(location_id=102, quantile="mean")
+    usa_peak_year = usa_peak_year.where(
+        usa_peak_year == usa_peak_year.max(), drop=True).year_id.values[0]
+    usa_peak_yr_da = pop_da.sel(location_id=102, year_id=usa_peak_year).drop(
+        "year_id")
     
-    chn_ind_peak = xr.concat(
-        [chn_peak_yr_da, ind_peak_yr_da], dim="location_id")
-    chn_ind_100 = pop_da.sel(year_id=2100, location_id=[6, 163])
+    chn_ind_usa_peak = xr.concat(
+        [chn_peak_yr_da, ind_peak_yr_da, usa_peak_yr_da], dim="location_id")
+    chn_ind_usa_100 = pop_da.sel(year_id=2100, location_id=[6, 163, 102])
     
-    pcnt_2100_to_peak_chn_ind = ((chn_ind_100 / chn_ind_peak) * 100).round(
+    pcnt_2100_to_peak_chn_ind_usa = (
+        (chn_ind_usa_100 / chn_ind_usa_peak) * 100).round(
         N_DECIMALS).drop(
         ["year_id", "age_group_id","sex_id", "scenario"]).to_dataframe(
         ).unstack("quantile").droplevel(0, axis=1).reset_index().merge(locs)
     
-    print("\nCHINA INDIA PCT OF PEAK IN 2100")
-    print(pcnt_2100_to_peak_chn_ind)
+    print("\nCHINA INDIA USA PCT OF PEAK IN 2100")
+    print(pcnt_2100_to_peak_chn_ind_usa)
     
     print("\nCHECK WITH TABLES BELOW:\n"
           "'The USA is projected to experience population growth until "
@@ -208,7 +215,7 @@ def super_region_age_structure():
     u15_subsah_fold_chng = (u15_subsah_100 / u15_subsah_17).to_dataframe(
         ).reset_index()
     
-    print("\nSUB-SAHARAN AFRICA FOLD CHANGE FROM 2017 TO 2100")
+    print("\nSUB-SAHARAN AFRICA FOLD CHANGE FROM 2017 TO 2100 UNDER 15")
     print(u15_subsah_fold_chng)
     
     print("\nCHECK VIA PLOTS: 'For all super-regions except sub-Saharan Africa "

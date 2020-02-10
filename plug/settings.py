@@ -40,7 +40,7 @@ BASELINE_VERSIONS = dict(
   tfr=VersionGBDRoundID("20190806_141418_fix_draw_bound_ccfx_to2110_5_scen", 5),
   tfr_mean_ui=VersionGBDRoundID(
     "20190806_141418_fix_draw_bound_ccfx_to2110_5_scen_combined", 5),
-  gdp=VersionGBDRoundID("20191030_15_ref_85_resub_agg_arima_squeeze_shocks_only_decay_wt_15_hiv_all_ordered_gdp", 5)
+  gdp=VersionGBDRoundID("20191126_15_ref_85_99_RELU_1000draw_drawfix_agg_arima_squeeze_shocks_hiv_all_gdp", 5)
 )
 
 FASTEST_SCENARIO_VERSIONS = dict(
