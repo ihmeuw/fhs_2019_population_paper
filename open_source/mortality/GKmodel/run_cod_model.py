@@ -6,6 +6,7 @@ from sksparse.cholmod import CholmodNotPositiveDefiniteError
 import xarray as xr
 
 from fbd_core import argparse
+from fbd_core.etl.post_hoc_relu import post_hoc_relu
 from fbd_model.exc import ConvergenceError
 from fbd_model.model.GKModel import GKModel
 from fbd_model.model.RepeatLastYear import RepeatLastYear
@@ -245,6 +246,11 @@ def main(acause, version, sex_id, sdi_time_interaction, oos, years, draws,
                           start=years.past_start, weight_decay=weight_decay,
                           y="y")
         params = gkmodel.fit()
+
+    # apply post-hoc RELU if the dictionary defined in settings is non-empty
+    if ss.RELU:
+        params = post_hoc_relu(params, ss.RELU)
+
     preds = GKModel.predict(ds, params, years.past_start,
                                 years.forecast_end,
                                 constant_vars=["ln_risk_scalar"])
