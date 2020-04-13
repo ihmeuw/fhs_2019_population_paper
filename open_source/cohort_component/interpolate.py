@@ -46,10 +46,10 @@ def nx_from_age_group_ids(age_group_id):
 
     # This uses wrong substitution b/c I couldn't figure out how
     # to use sql string substitution for the list of IDs.
-    query = ("SELECT age_group_years_end-age_group_years_start "
-             "FROM shared.age_group "
-             "WHERE age_group_id IN {}"
-             "ORDER BY age_group_years_start;").format(
+    query = ("SELECT *************************** "
+             "FROM ********** "
+             "WHERE ******** IN {}"
+             "ORDER BY **********;").format(
         str(tuple(age_group_ids)))
 
     with connectors.db_connect("fbd-dev-read", database="shared") as conn:
@@ -90,11 +90,11 @@ def nx_subset_contiguous(age_group_id):
 
     # This uses wrong substitution b/c I couldn't figure out how
     # to use sql string substitution for the list of IDs.
-    query = ("SELECT age_group_id, age_group_days_start, "
-             "       age_group_days_end-age_group_days_start as nxdays "
-             "FROM shared.age_group "
-             "WHERE age_group_id IN {} "
-             "ORDER BY age_group_days_start;").format(
+    query = ("SELECT **********, **********, "
+             "       ********************** as nxdays "
+             "FROM ********* "
+             "WHERE ******* IN {} "
+             "ORDER BY ********;").format(
         str(tuple(age_group_ids)))
     print(query)
 

@@ -317,9 +317,9 @@ def _acauses(cause_ids):
     """Returns pandas.DataFrame that maps acauses to cause_ids, for the list of
     cause-ids given"""
     acause_query = (
-        "SELECT acause, cause_id "
-        "FROM shared.cause "
-        "WHERE cause_id IN %(cause_ids)s"
+        "SELECT ******, ****** "
+        "FROM ******** "
+        "WHERE ********* IN %(cause_ids)s"
         )
     params = dict(cause_ids=tuple(map(int, cause_ids)))
     LOGGER.debug("Getting acauses from database.")
@@ -331,9 +331,9 @@ def _reis(rei_ids):
     """Returns pandas.DataFrame that maps reis to rei_ids, for the list of
     rei-ids given"""
     rei_query = (
-        "SELECT rei, rei_id "
-        "FROM shared.rei "
-        "WHERE rei_id IN %(rei_ids)s"
+        "SELECT ****, ***** "
+        "FROM ******* "
+        "WHERE ****** IN %(rei_ids)s"
         )
     params = dict(rei_ids=tuple(map(int, rei_ids)))
     LOGGER.debug("Getting acauses from database.")
@@ -427,8 +427,8 @@ def get_risk_hierarchy(gbd_round_id):
             gbd_round_id=gbd_round_id)
         params = dict(version=rei_hierarchy_version_id)
 
-        q = (f"SELECT * FROM shared.rei_hierarchy_history "
-             f"WHERE rei_set_version_id = %(version)s")
+        q = (f"SELECT * FROM **************** "
+             f"WHERE *********** = %(version)s")
         risk_hierarchy = db.query(q, "fbd-dev-read", params, database="shared")
     else:
         rei_hierarchy_version_id = get_hierarchy_version_id(
